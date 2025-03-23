@@ -39,6 +39,7 @@ body {
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
 }
 
 .app-container {
@@ -793,6 +794,7 @@ input[type="range"]::-moz-range-thumb:hover {
 }
 
 .export-checkbox input[type="checkbox"] {
+    position: relative;
     appearance: none;
     -webkit-appearance: none;
     width: 20px;
@@ -800,7 +802,6 @@ input[type="range"]::-moz-range-thumb:hover {
     border: 2px solid var(--border-color);
     border-radius: 4px;
     background-color: var(--bg-dark);
-    position: relative;
     cursor: pointer;
     transition: all var(--transition-normal);
 }
