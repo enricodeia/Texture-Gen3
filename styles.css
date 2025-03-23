@@ -414,6 +414,10 @@ main {
     transition: all var(--transition-fast);
 }
 
+.control-btn.full-width {
+    width: 100%;
+}
+
 .control-btn:hover {
     background-color: var(--accent-color);
     border-color: var(--accent-color);
@@ -422,17 +426,6 @@ main {
 
 .control-btn i {
     margin-right: var(--spacing-xs);
-}
-
-.smart-enhance-btn {
-    background-color: var(--accent-color);
-    border-color: var(--accent-color);
-    color: white;
-}
-
-.smart-enhance-btn:hover {
-    background-color: var(--accent-hover);
-    border-color: var(--accent-hover);
 }
 
 .seamless-btn {
@@ -475,10 +468,19 @@ main {
     outline: none;
 }
 
-.seamless-buttons {
-    display: flex;
-    gap: var(--spacing-sm);
-    margin-top: var(--spacing-xs);
+.seamless-preview-container {
+    width: 100%;
+    height: 200px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    margin-top: var(--spacing-sm);
+}
+
+.seamless-preview-container canvas {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 
 /* 3D Preview */
@@ -503,33 +505,6 @@ main {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-md);
-}
-
-.model-tabs {
-    display: flex;
-    gap: var(--spacing-xs);
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: var(--spacing-sm);
-}
-
-.model-tab {
-    padding: var(--spacing-xs) var(--spacing-md);
-    background: none;
-    border: none;
-    color: var(--text-color-secondary);
-    font-size: 0.875rem;
-    border-radius: var(--border-radius);
-    transition: all var(--transition-fast);
-}
-
-.model-tab:hover {
-    background-color: rgba(255, 255, 255, 0.05);
-    color: var(--text-color);
-}
-
-.model-tab.active {
-    background-color: var(--accent-muted);
-    color: var(--accent-color);
 }
 
 .rotation-controls {
