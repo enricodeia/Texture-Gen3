@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let animationFrameId = null;
     let useHDRI = false;
     let pmremGenerator, envMap;
-    let currentModelType = 'sphere';
+    let seamlessModeActive = false;
     
     // UV Editor variables
     let uvCanvas, uvContext;
@@ -42,9 +42,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Controls Tabs
     const controlsTabs = document.querySelectorAll('.controls-tab');
     const controlsPanels = document.querySelectorAll('.controls-panel');
-    
-    // Model Tabs
-    const modelTabs = document.querySelectorAll('.model-tab');
     
     // Rotation controls
     const rotationX = document.getElementById('rotation-x');
@@ -82,12 +79,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const aoRadius = document.getElementById('ao-radius');
     
     // Seamless controls
-    const makeSeamlessBtn = document.getElementById('make-seamless');
+    const toggleSeamlessBtn = document.getElementById('toggle-seamless');
     const seamlessPanel = document.getElementById('seamless-panel');
     const seamlessStrength = document.getElementById('seamless-strength');
     const seamlessMethod = document.getElementById('seamless-method');
-    const applySeamlessBtn = document.getElementById('apply-seamless');
-    const cancelSeamlessBtn = document.getElementById('cancel-seamless');
+    const seamlessTiles = document.getElementById('seamless-tiles');
+    const seamlessPreviewCanvas = document.getElementById('seamless-preview');
     
     // UV Editor elements
     uvCanvas = document.getElementById('uv-canvas');
@@ -130,6 +127,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const uvScaleValue = document.getElementById('uv-scale-value');
     const aoRadiusValue = document.getElementById('ao-radius-value');
     const seamlessStrengthValue = document.getElementById('seamless-strength-value');
+    const seamlessTilesValue = document.getElementById('seamless-tiles-value');
     const uvOverlayOpacityValue = document.getElementById('uv-overlay-opacity-value');
     
     // Download buttons
@@ -141,7 +139,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const downloadEmission = document.getElementById('download-emission');
     const exportZip = document.getElementById('export-zip');
     const exportThreejs = document.getElementById('export-threejs');
-    const smartEnhanceBtn = document.getElementById('smart-enhance');
     
     // Export options
     const exportBase = document.getElementById('export-base');
@@ -190,9 +187,6 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Initialize UV Editor when needed
             setupControlsTabs();
-            
-            // Set up model tabs
-            setupModelTabs();
             
         } catch (error) {
             console.error('Error initializing application:', error);
@@ -263,26 +257,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Set up model tabs
-    function setupModelTabs() {
-        modelTabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                // Remove active class from all tabs
-                modelTabs.forEach(t => t.classList.remove('active'));
-                
-                // Add active class to clicked tab
-                tab.classList.add('active');
-                
-                // Get target model
-                const modelType = tab.dataset.model;
-                currentModelType = modelType;
-                
-                // Create the selected model
-                createModel(modelType);
-            });
-        });
-    }
-    
     // Initialize Three.js scene
     function initThreeJS() {
         // Create scene
@@ -331,7 +305,7 @@ document.addEventListener('DOMContentLoaded', function() {
         scene.add(grid);
     
         // Create initial sphere model
-        createModel('sphere');
+        createModel();
         
         // Add loading indicator until fully loaded
         showLoadingIndicator('Initializing 3D environment...', 0);
@@ -418,24 +392,8 @@ document.addEventListener('DOMContentLoaded', function() {
             uvPreviewScene.remove(uvPreviewModel);
         }
         
-        let geometry;
-        
-        // Create geometry based on current model type
-        switch (currentModelType) {
-            case 'cube':
-                geometry = new THREE.BoxGeometry(1, 1, 1, 10, 10, 10);
-                break;
-            case 'plane':
-                geometry = new THREE.PlaneGeometry(1.5, 1.5, 10, 10);
-                break;
-            case 'cylinder':
-                geometry = new THREE.CylinderGeometry(0.7, 0.7, 1.5, 32, 10);
-                break;
-            case 'sphere':
-            default:
-                geometry = new THREE.SphereGeometry(1, 32, 32);
-                break;
-        }
+        // Create geometry (sphere only)
+        const geometry = new THREE.SphereGeometry(1, 32, 32);
         
         // Create material
         const material = new THREE.MeshStandardMaterial({
@@ -1158,7 +1116,7 @@ document.addEventListener('DOMContentLoaded', function() {
         showNotification('UV changes applied', 'success');
         
         // Update the 3D model texture
-        createModel(currentModelType);
+        createModel();
     }
     
     // Cancel UV changes
@@ -1262,30 +1220,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Create or update the 3D model with textures
-    function createModel(modelType) {
+    function createModel() {
         // Remove existing model if it exists
         if (currentModel) {
             scene.remove(currentModel);
         }
         
-        // Create geometry based on model type
-        let geometry;
-        
-        switch (modelType) {
-            case 'cube':
-                geometry = new THREE.BoxGeometry(1.5, 1.5, 1.5, 64, 64, 64);
-                break;
-            case 'plane':
-                geometry = new THREE.PlaneGeometry(2, 2, 64, 64);
-                break;
-            case 'cylinder':
-                geometry = new THREE.CylinderGeometry(0.8, 0.8, 2, 64, 64);
-                break;
-            case 'sphere':
-            default:
-                geometry = new THREE.SphereGeometry(1, 64, 64);
-                break;
-        }
+        // Create sphere geometry
+        const geometry = new THREE.SphereGeometry(1, 64, 64);
         
         // Create material
         const material = new THREE.MeshStandardMaterial({
@@ -1422,6 +1364,9 @@ document.addEventListener('DOMContentLoaded', function() {
             uvPreviewCamera.updateProjectionMatrix();
             uvPreviewRenderer.setSize(uvModelContainer.clientWidth, uvModelContainer.clientHeight);
         }
+        
+        // Resize seamless preview if active
+        updateSeamlessPreview();
     }
     
     // Set up event listeners
@@ -1500,14 +1445,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Regenerate AO map with new radius
                 if (originalImageData) {
                     generateAOMap(originalImageData);
-                    createModel(currentModelType);
+                    createModel();
                 }
             });
         }
         
         // Seamless controls
-        if (makeSeamlessBtn) {
-            makeSeamlessBtn.addEventListener('click', toggleSeamlessPanel);
+        if (toggleSeamlessBtn) {
+            toggleSeamlessBtn.addEventListener('click', toggleSeamlessMode);
         }
         
         if (seamlessStrength) {
@@ -1515,15 +1460,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (seamlessStrengthValue) {
                     seamlessStrengthValue.textContent = parseFloat(seamlessStrength.value).toFixed(2);
                 }
+                updateSeamlessPreview();
             });
         }
         
-        if (applySeamlessBtn) {
-            applySeamlessBtn.addEventListener('click', applySeamlessTexture);
+        if (seamlessMethod) {
+            seamlessMethod.addEventListener('change', updateSeamlessPreview);
         }
         
-        if (cancelSeamlessBtn) {
-            cancelSeamlessBtn.addEventListener('click', toggleSeamlessPanel);
+        if (seamlessTiles) {
+            seamlessTiles.addEventListener('input', () => {
+                const tiles = parseInt(seamlessTiles.value);
+                if (seamlessTilesValue) {
+                    seamlessTilesValue.textContent = `${tiles}×${tiles}`;
+                }
+                updateSeamlessPreview();
+            });
         }
         
         // Normal algorithm selection
@@ -1532,7 +1484,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Regenerate normal map with new algorithm
                 if (originalImageData) {
                     generateNormalMap(originalImageData);
-                    createModel(currentModelType);
+                    createModel();
                 }
             });
         }
@@ -1541,11 +1493,6 @@ document.addEventListener('DOMContentLoaded', function() {
         useHDRIToggle.addEventListener('change', (e) => {
             toggleHDRILighting(e.target.checked);
         });
-        
-        // Smart enhance button
-        if (smartEnhanceBtn) {
-            smartEnhanceBtn.addEventListener('click', smartEnhanceTexture);
-        }
         
         // Light position
         lightX.addEventListener('input', updateLightPosition);
@@ -1602,70 +1549,144 @@ document.addEventListener('DOMContentLoaded', function() {
         document.addEventListener('keydown', handleKeyboardShortcuts);
     }
     
-    // Toggle seamless panel visibility
-    function toggleSeamlessPanel() {
+    // Toggle seamless mode
+    function toggleSeamlessMode() {
+        if (!hasUploadedImage) {
+            showNotification('Please upload a texture first', 'warning');
+            return;
+        }
+        
+        seamlessModeActive = !seamlessModeActive;
+        
         if (seamlessPanel) {
-            if (seamlessPanel.classList.contains('active')) {
-                seamlessPanel.classList.remove('active');
-                seamlessPanel.style.display = 'none';
-            } else {
-                seamlessPanel.classList.add('active');
+            if (seamlessModeActive) {
                 seamlessPanel.style.display = 'block';
+                seamlessPanel.classList.add('active');
+                toggleSeamlessBtn.textContent = 'Disable Seamless Mode';
+                updateSeamlessPreview();
+            } else {
+                seamlessPanel.style.display = 'none';
+                seamlessPanel.classList.remove('active');
+                toggleSeamlessBtn.textContent = 'Enable Seamless Mode';
+                
+                // If we already have a seamless texture, use it for the maps
+                if (seamlessImageData) {
+                    applySeamlessTextureToMaps();
+                }
             }
         }
     }
     
-    // Apply seamless texture transformation
-    function applySeamlessTexture() {
-        if (!originalImageData) {
-            showNotification('Please upload a texture first', 'error');
-            return;
+    // Update the seamless preview
+    function updateSeamlessPreview() {
+        if (!seamlessPreviewCanvas || !hasUploadedImage || !originalImageData) return;
+        
+        const ctx = seamlessPreviewCanvas.getContext('2d');
+        
+        // Get the preview container size
+        const container = seamlessPreviewCanvas.parentElement;
+        if (!container) return;
+        
+        // Set canvas size to container
+        seamlessPreviewCanvas.width = container.clientWidth;
+        seamlessPreviewCanvas.height = container.clientHeight;
+        
+        // Create temporary canvas for seamless processing
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = originalImageData.width;
+        tempCanvas.height = originalImageData.height;
+        const tempCtx = tempCanvas.getContext('2d');
+        
+        // Generate seamless texture
+        const method = seamlessMethod.value || 'mirror';
+        const strength = parseFloat(seamlessStrength.value) || 0.5;
+        
+        // Create a new seamless texture
+        tempCtx.putImageData(originalImageData, 0, 0);
+        
+        // Apply seamless algorithm
+        const seamlessResult = createSeamlessTexture(originalImageData, method, strength);
+        tempCtx.putImageData(seamlessResult, 0, 0);
+        
+        // Draw the seamless texture tiled
+        const tiles = parseInt(seamlessTiles.value) || 2;
+        const tileSize = Math.min(seamlessPreviewCanvas.width, seamlessPreviewCanvas.height) / tiles;
+        
+        ctx.clearRect(0, 0, seamlessPreviewCanvas.width, seamlessPreviewCanvas.height);
+        
+        // Draw checkerboard background
+        ctx.fillStyle = '#252525';
+        for (let y = 0; y < tiles; y++) {
+            for (let x = 0; x < tiles; x++) {
+                if ((x + y) % 2 === 0) {
+                    ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+                }
+            }
         }
         
-        showLoadingIndicator('Creating seamless texture...', 20);
+        // Draw the tiles
+        for (let y = 0; y < tiles; y++) {
+            for (let x = 0; x < tiles; x++) {
+                ctx.drawImage(
+                    tempCanvas,
+                    x * tileSize,
+                    y * tileSize,
+                    tileSize,
+                    tileSize
+                );
+            }
+        }
         
-        setTimeout(() => {
-            const method = seamlessMethod.value;
-            const strength = parseFloat(seamlessStrength.value);
+        // Draw grid
+        ctx.strokeStyle = 'rgba(60, 158, 255, 0.7)';
+        ctx.lineWidth = 1;
+        
+        for (let i = 1; i < tiles; i++) {
+            // Vertical line
+            ctx.beginPath();
+            ctx.moveTo(i * tileSize, 0);
+            ctx.lineTo(i * tileSize, seamlessPreviewCanvas.height);
+            ctx.stroke();
             
-            // Create seamless version
-            seamlessImageData = createSeamlessTexture(originalImageData, method, strength);
+            // Horizontal line
+            ctx.beginPath();
+            ctx.moveTo(0, i * tileSize);
+            ctx.lineTo(seamlessPreviewCanvas.width, i * tileSize);
+            ctx.stroke();
+        }
+        
+        // Store the processed seamless image data
+        seamlessImageData = seamlessResult;
+        
+        // Automatically apply seamless texture to maps
+        applySeamlessTextureToMaps();
+    }
+    
+    // Apply the seamless texture to all maps
+    function applySeamlessTextureToMaps() {
+        if (!seamlessImageData) return;
+        
+        // Create a temporary image from the seamless data
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = seamlessImageData.width;
+        tempCanvas.height = seamlessImageData.height;
+        const tempCtx = tempCanvas.getContext('2d');
+        tempCtx.putImageData(seamlessImageData, 0, 0);
+        
+        const img = new Image();
+        img.onload = function() {
+            // Generate new maps with the seamless texture
+            generateBaseMap(img);
+            generateNormalMap(seamlessImageData);
+            generateRoughnessMap(seamlessImageData);
+            generateDisplacementMap(seamlessImageData);
+            generateAOMap(seamlessImageData);
+            generateEmissionMap(seamlessImageData);
             
-            // Use the seamless image for all textures
-            updateProgress(60);
-            updateLoadingMessage('Applying seamless texture...');
-            
-            // Create a temporary image to process
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = seamlessImageData.width;
-            tempCanvas.height = seamlessImageData.height;
-            const tempCtx = tempCanvas.getContext('2d');
-            tempCtx.putImageData(seamlessImageData, 0, 0);
-            
-            // Convert to image for processing
-            const img = new Image();
-            img.onload = function() {
-                // Generate texture maps with the seamless image
-                generateBaseMap(img, true);
-                generateNormalMap(seamlessImageData);
-                generateRoughnessMap(seamlessImageData);
-                generateDisplacementMap(seamlessImageData);
-                generateAOMap(seamlessImageData);
-                generateEmissionMap(seamlessImageData);
-                
-                // Update model
-                createModel(currentModelType);
-                
-                // Hide seamless panel
-                toggleSeamlessPanel();
-                
-                updateProgress(100);
-                hideLoadingIndicator();
-                showNotification('Seamless texture applied successfully!', 'success');
-            };
-            img.src = tempCanvas.toDataURL();
-            
-        }, 500);
+            // Update 3D model
+            createModel();
+        };
+        img.src = tempCanvas.toDataURL();
     }
     
     // Create seamless texture from image data
@@ -1780,4 +1801,1116 @@ document.addEventListener('DOMContentLoaded', function() {
                 ctx.drawImage(canvas, 0, height - blendSize * 2, width, blendSize * 2, 0, -blendSize, width, blendSize * 2);
                 
                 // Copy top edge to bottom with opacity
-                ctx.drawImage(
+                ctx.drawImage(canvas, 0, 0, width, blendSize * 2, 0, height - blendSize, width, blendSize * 2);
+                
+                ctx.restore();
+                break;
+        }
+        
+        // Get the processed image data
+        return ctx.getImageData(0, 0, width, height);
+    }
+    
+    // Handle keyboard shortcuts
+    function handleKeyboardShortcuts(e) {
+        // Ignore shortcuts when in input fields
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+        
+        switch (e.key) {
+            case ' ': // Spacebar - toggle auto-rotate
+                toggleAutoRotation();
+                e.preventDefault();
+                break;
+                
+            case 'e': // Export ZIP
+            case 'E':
+                exportAllMapsAsZip();
+                break;
+                
+            case 'c': // Export Three.js Code
+            case 'C':
+                exportThreejsCode();
+                break;
+                
+            case 't': // Toggle Seamless
+            case 'T':
+                if (toggleSeamlessBtn) toggleSeamlessMode();
+                break;
+                
+            case 'h': // Toggle HDRI
+            case 'H':
+                if (useHDRIToggle) {
+                    useHDRIToggle.checked = !useHDRIToggle.checked;
+                    toggleHDRILighting(useHDRIToggle.checked);
+                }
+                break;
+                
+            case 'Escape': // Close modals or panels
+                if (seamlessPanel && seamlessModeActive) {
+                    toggleSeamlessMode();
+                }
+                break;
+                
+            case 'ArrowLeft': // Rotate Y axis left
+                if (currentModel) {
+                    currentModel.rotation.y -= 0.1;
+                    rotationY.value = currentModel.rotation.y;
+                }
+                break;
+                
+            case 'ArrowRight': // Rotate Y axis right
+                if (currentModel) {
+                    currentModel.rotation.y += 0.1;
+                    rotationY.value = currentModel.rotation.y;
+                }
+                break;
+                
+            case 'ArrowUp': // Rotate X axis up
+                if (currentModel) {
+                    currentModel.rotation.x -= 0.1;
+                    rotationX.value = currentModel.rotation.x;
+                }
+                break;
+                
+            case 'ArrowDown': // Rotate X axis down
+                if (currentModel) {
+                    currentModel.rotation.x += 0.1;
+                    rotationX.value = currentModel.rotation.x;
+                }
+                break;
+        }
+    }
+    
+    // Update UV projection properties
+    function updateUVProjection() {
+        // Update display values
+        if (uvRepeatXValue) uvRepeatXValue.textContent = uvRepeatX.value;
+        if (uvRepeatYValue) uvRepeatYValue.textContent = uvRepeatY.value;
+        if (uvOffsetXValue) uvOffsetXValue.textContent = parseFloat(uvOffsetX.value).toFixed(2);
+        if (uvOffsetYValue) uvOffsetYValue.textContent = parseFloat(uvOffsetY.value).toFixed(2);
+        if (uvRotationValue) uvRotationValue.textContent = `${uvRotation.value}°`;
+        if (uvScaleValue) uvScaleValue.textContent = parseFloat(uvScale.value).toFixed(1);
+        
+        // Update model with new UV settings
+        if (hasUploadedImage) {
+            createModel();
+        }
+    }
+    
+    // Clear the uploaded image
+    function clearImage() {
+        // Reset the UI
+        previewOverlay.style.display = 'none';
+        uploadedImage.src = '';
+        hasUploadedImage = false;
+        
+        // Remove textures from model
+        if (currentModel && currentModel.material) {
+            currentModel.material.map = null;
+            currentModel.material.normalMap = null;
+            currentModel.material.roughnessMap = null;
+            currentModel.material.displacementMap = null;
+            currentModel.material.aoMap = null;
+            currentModel.material.emissiveMap = null;
+            currentModel.material.needsUpdate = true;
+        }
+        
+        // Clear canvases
+        clearCanvas(baseCanvas);
+        clearCanvas(normalCanvas);
+        clearCanvas(roughnessCanvas);
+        clearCanvas(displacementCanvas);
+        clearCanvas(aoCanvas);
+        clearCanvas(emissionCanvas);
+        
+        // Reset textures
+        baseTexture = null;
+        normalTexture = null;
+        roughnessTexture = null;
+        displacementTexture = null;
+        aoTexture = null;
+        emissionTexture = null;
+        originalImageData = null;
+        seamlessImageData = null;
+        
+        // Reset seamless mode if active
+        if (seamlessModeActive) {
+            toggleSeamlessMode();
+        }
+        
+        showNotification('Image removed', 'info');
+    }
+    
+    // Clear a canvas
+    function clearCanvas(canvas) {
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+    
+    // Handle file upload
+    function handleFileUpload(e) {
+        console.log("File upload triggered", e.target.files);
+        if (e.target.files && e.target.files.length) {
+            processUploadedFile(e.target.files[0]);
+        }
+    }
+    
+    // Process uploaded file
+    function processUploadedFile(file) {
+        console.log("Processing file:", file);
+        if (!file || !file.type.match('image.*')) {
+            showNotification('Please upload an image file.', 'error');
+            return;
+        }
+        
+        // Show loading state
+        showLoadingIndicator('Reading image file...', 10);
+        
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            try {
+                updateProgress(30);
+                updateLoadingMessage('Processing image...');
+                
+                // Display the image
+                uploadedImage.src = e.target.result;
+                previewOverlay.style.display = 'flex';
+                hasUploadedImage = true;
+                
+                // Load the image to process it
+                const img = new Image();
+                img.onload = function() {
+                    try {
+                        updateProgress(50);
+                        updateLoadingMessage('Analyzing texture...');
+                        
+                        // Store original image data
+                        originalImageData = getImageData(img);
+                        
+                        updateProgress(60);
+                        updateLoadingMessage('Generating texture maps...');
+                        
+                        // Generate texture maps
+                        generateTextureMaps(img);
+                        
+                        updateProgress(90);
+                        updateLoadingMessage('Applying to 3D model...');
+                        
+                        // Recreate the model to apply textures
+                        createModel();
+                        
+                        // Remove loading state
+                        setTimeout(() => {
+                            updateProgress(100);
+                            hideLoadingIndicator();
+                            showNotification('Texture maps generated successfully!', 'success');
+                        }, 500);
+                    } catch (error) {
+                        console.error('Error processing image:', error);
+                        handleProcessingError();
+                    }
+                };
+                img.src = e.target.result;
+            } catch (error) {
+                console.error('Error loading image:', error);
+                handleProcessingError();
+            }
+        };
+        
+        reader.onerror = function() {
+            handleProcessingError();
+        };
+        
+        reader.readAsDataURL(file);
+    }
+    
+    // Handle processing error
+    function handleProcessingError() {
+        hideLoadingIndicator();
+        showNotification('Error processing image. Please try another image.', 'error');
+    }
+    
+    // Show loading indicator with specified message and progress
+    function showLoadingIndicator(message, progress = 0) {
+        processingMessage.textContent = message;
+        progressBar.style.width = `${progress}%`;
+        processingIndicator.style.display = 'flex';
+    }
+    
+    // Update loading progress
+    function updateProgress(progress) {
+        progressBar.style.width = `${progress}%`;
+    }
+    
+    // Update loading message
+    function updateLoadingMessage(message) {
+        processingMessage.textContent = message;
+    }
+    
+    // Hide loading indicator
+    function hideLoadingIndicator() {
+        processingIndicator.style.display = 'none';
+    }
+    
+    // Show notification
+    function showNotification(message, type = 'info') {
+        // Define titles based on notification type
+        const titles = {
+            success: 'Success',
+            error: 'Error',
+            info: 'Information',
+            warning: 'Warning'
+        };
+        
+        // Define icons based on notification type
+        const icons = {
+            success: 'fa-check-circle',
+            error: 'fa-exclamation-circle',
+            info: 'fa-info-circle',
+            warning: 'fa-exclamation-triangle'
+        };
+        
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.innerHTML = `
+            <div class="notification-icon">
+                <i class="fas ${icons[type]}"></i>
+            </div>
+            <div class="notification-content">
+                <h4 class="notification-title">${titles[type]}</h4>
+                <p class="notification-message">${message}</p>
+            </div>
+            <button class="notification-close">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        
+        // Add to notification container
+        notificationContainer.appendChild(notification);
+        
+        // Add close button functionality
+        const closeBtn = notification.querySelector('.notification-close');
+        closeBtn.addEventListener('click', () => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        });
+        
+        // Animate in
+        setTimeout(() => {
+            notification.classList.add('show');
+        }, 10);
+        
+        // Auto-remove after delay
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }
+        }, 5000);
+    }
+    
+    // Get image data from an image element
+    function getImageData(img) {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        return ctx.getImageData(0, 0, canvas.width, canvas.height);
+    }
+    
+    // Generate all texture maps
+    function generateTextureMaps(img) {
+        // Generate base color map (formerly diffuse)
+        generateBaseMap(img);
+        
+        // Generate normal map
+        generateNormalMap(originalImageData);
+        
+        // Generate roughness map
+        generateRoughnessMap(originalImageData);
+        
+        // Generate displacement map 
+        generateDisplacementMap(originalImageData);
+        
+        // Generate ambient occlusion map
+        generateAOMap(originalImageData);
+        
+        // Generate emission map
+        generateEmissionMap(originalImageData);
+    }
+    
+    // Generate base color map (formerly diffuse)
+    function generateBaseMap(img) {
+        // Set canvas dimensions
+        baseCanvas.width = img.width;
+        baseCanvas.height = img.height;
+        
+        // Draw the image
+        const ctx = baseCanvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        
+        // Apply base strength as a multiplier
+        if (parseFloat(baseStrength.value) !== 1.0) {
+            const imageData = ctx.getImageData(0, 0, baseCanvas.width, baseCanvas.height);
+            const strength = parseFloat(baseStrength.value);
+            
+            for (let i = 0; i < imageData.data.length; i += 4) {
+                imageData.data[i] = Math.min(255, imageData.data[i] * strength);
+                imageData.data[i + 1] = Math.min(255, imageData.data[i + 1] * strength);
+                imageData.data[i + 2] = Math.min(255, imageData.data[i + 2] * strength);
+            }
+            
+            ctx.putImageData(imageData, 0, 0);
+        }
+        
+        // Create base color texture
+        baseTexture = new THREE.Texture(baseCanvas);
+        if (renderer) {
+            baseTexture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+        }
+        baseTexture.needsUpdate = true;
+        
+        console.log("Base color map generated");
+    }
+    
+    // Generate normal map with enhanced detail
+    function generateNormalMap(imageData) {
+        // Set canvas dimensions
+        normalCanvas.width = imageData.width;
+        normalCanvas.height = imageData.height;
+        
+        const ctx = normalCanvas.getContext('2d');
+        const outputData = ctx.createImageData(imageData.width, imageData.height);
+        
+        // Get selected algorithm
+        const algorithm = normalAlgorithmSelect ? normalAlgorithmSelect.value : 'sobel';
+        const strength = parseFloat(normalStrength.value);
+        
+        // Different kernel operators
+        const operators = {
+            sobel: {
+                x: [
+                    -1, 0, 1,
+                    -2, 0, 2,
+                    -1, 0, 1
+                ],
+                y: [
+                    -1, -2, -1,
+                     0,  0,  0,
+                     1,  2,  1
+                ]
+            },
+            prewitt: {
+                x: [
+                    -1, 0, 1,
+                    -1, 0, 1,
+                    -1, 0, 1
+                ],
+                y: [
+                    -1, -1, -1,
+                     0,  0,  0,
+                     1,  1,  1
+                ]
+            },
+            enhanced: {
+                x: [
+                    -3, 0, 3,
+                    -10, 0, 10,
+                    -3, 0, 3
+                ],
+                y: [
+                    -3, -10, -3,
+                     0,   0,  0,
+                     3,  10,  3
+                ]
+            }
+        };
+        
+        // Use the selected operator or default to sobel
+        const operator = operators[algorithm] || operators.sobel;
+        
+        // Process each pixel to create normal map
+        for (let y = 0; y < imageData.height; y++) {
+            for (let x = 0; x < imageData.width; x++) {
+                // Calculate gradient using the selected operator
+                let gx = 0;
+                let gy = 0;
+                
+                for (let ky = -1; ky <= 1; ky++) {
+                    for (let kx = -1; kx <= 1; kx++) {
+                        const px = Math.min(imageData.width - 1, Math.max(0, x + kx));
+                        const py = Math.min(imageData.height - 1, Math.max(0, y + ky));
+                        
+                        const idx = (py * imageData.width + px) * 4;
+                        // Use grayscale value (average of RGB)
+                        const val = (imageData.data[idx] + imageData.data[idx + 1] + imageData.data[idx + 2]) / 3;
+                        
+                        gx += val * operator.x[(ky + 1) * 3 + (kx + 1)];
+                        gy += val * operator.y[(ky + 1) * 3 + (kx + 1)];
+                    }
+                }
+                
+                // Convert gradient to normal vector
+                const scale = 3.0 * strength; // Apply strength parameter
+                const nx = -gx * scale;
+                const ny = -gy * scale;
+                const nz = 200; // Higher Z value for more pronounced effect
+                
+                // Normalize
+                const length = Math.sqrt(nx * nx + ny * ny + nz * nz);
+                
+                // Convert from [-1, 1] to [0, 1] range for RGB
+                const outIdx = (y * imageData.width + x) * 4;
+                outputData.data[outIdx] = ((nx / length) * 0.5 + 0.5) * 255;
+                outputData.data[outIdx + 1] = ((ny / length) * 0.5 + 0.5) * 255;
+                outputData.data[outIdx + 2] = ((nz / length) * 0.5 + 0.5) * 255;
+                outputData.data[outIdx + 3] = 255; // Alpha
+            }
+        }
+        
+        // Put the processed data back to canvas
+        ctx.putImageData(outputData, 0, 0);
+        
+        // Create normal texture
+        normalTexture = new THREE.Texture(normalCanvas);
+        normalTexture.needsUpdate = true;
+        
+        console.log("Normal map generated");
+    }
+    
+    // Generate roughness map
+    function generateRoughnessMap(imageData) {
+        // Set canvas dimensions
+        roughnessCanvas.width = imageData.width;
+        roughnessCanvas.height = imageData.height;
+        
+        const ctx = roughnessCanvas.getContext('2d');
+        const outputData = ctx.createImageData(imageData.width, imageData.height);
+        
+        // Calculate frequency components and variance for roughness estimation
+        for (let y = 0; y < imageData.height; y++) {
+            for (let x = 0; x < imageData.width; x++) {
+                const idx = (y * imageData.width + x) * 4;
+                
+                // Sample a 3x3 neighborhood
+                let sumVariance = 0;
+                let count = 0;
+                
+                for (let ky = -1; ky <= 1; ky++) {
+                    for (let kx = -1; kx <= 1; kx++) {
+                        const px = Math.min(imageData.width - 1, Math.max(0, x + kx));
+                        const py = Math.min(imageData.height - 1, Math.max(0, y + ky));
+                        
+                        const nIdx = (py * imageData.width + px) * 4;
+                        const centerIdx = (y * imageData.width + x) * 4;
+                        
+                        // Get grayscale values
+                        const centerVal = (imageData.data[centerIdx] + imageData.data[centerIdx + 1] + imageData.data[centerIdx + 2]) / 3;
+                        const neighborVal = (imageData.data[nIdx] + imageData.data[nIdx + 1] + imageData.data[nIdx + 2]) / 3;
+                        
+                        // Accumulate square differences
+                        sumVariance += Math.pow(neighborVal - centerVal, 2);
+                        count++;
+                    }
+                }
+                
+                // Normalize and apply inverse - smoother areas are less rough
+                let roughness = Math.sqrt(sumVariance / count) / 16.0;
+                
+                // Apply variable roughness adjustment based on brightness
+                const brightness = (imageData.data[idx] + imageData.data[idx + 1] + imageData.data[idx + 2]) / 3;
+                
+                // Brighter areas tend to be smoother
+                roughness = roughness * 0.6 + (255 - brightness) / 255 * 0.4;
+                
+                // Apply strength parameter
+                roughness *= parseFloat(roughnessStrength.value) * 2;
+                
+                // Ensure roughness is between 0 and 1
+                roughness = Math.min(1.0, Math.max(0.0, roughness));
+                
+                // Convert to 0-255 range
+                const pixelValue = roughness * 255;
+                
+                outputData.data[idx] = pixelValue;
+                outputData.data[idx + 1] = pixelValue;
+                outputData.data[idx + 2] = pixelValue;
+                outputData.data[idx + 3] = 255; // Alpha
+            }
+        }
+        
+        // Put the processed data back to canvas
+        ctx.putImageData(outputData, 0, 0);
+        
+        // Create roughness texture
+        roughnessTexture = new THREE.Texture(roughnessCanvas);
+        roughnessTexture.needsUpdate = true;
+        
+        console.log("Roughness map generated");
+    }
+    
+    // Generate displacement map
+    function generateDisplacementMap(imageData) {
+        // Set canvas dimensions
+        displacementCanvas.width = imageData.width;
+        displacementCanvas.height = imageData.height;
+        
+        const ctx = displacementCanvas.getContext('2d');
+        const outputData = ctx.createImageData(imageData.width, imageData.height);
+        
+        // Simple grayscale conversion with contrast enhancement
+        for (let i = 0; i < imageData.data.length; i += 4) {
+            const r = imageData.data[i];
+            const g = imageData.data[i + 1];
+            const b = imageData.data[i + 2];
+            
+            // Calculate brightness
+            let brightness = Math.round(0.299 * r + 0.587 * g + 0.114 * b);
+            
+            // Enhance contrast
+            brightness = Math.max(0, Math.min(255, (brightness - 128) * 1.2 + 128));
+            
+            // Apply strength parameter
+            const strength = parseFloat(displacementStrength.value) * 2;
+            brightness = Math.min(255, Math.max(0, brightness * strength));
+            
+            outputData.data[i] = brightness;
+            outputData.data[i + 1] = brightness;
+            outputData.data[i + 2] = brightness;
+            outputData.data[i + 3] = 255; // Alpha
+        }
+        
+        // Put the processed data back to canvas
+        ctx.putImageData(outputData, 0, 0);
+        
+        // Create displacement texture
+        displacementTexture = new THREE.Texture(displacementCanvas);
+        displacementTexture.needsUpdate = true;
+        
+        console.log("Displacement map generated");
+    }
+    
+    // Generate ambient occlusion map
+    function generateAOMap(imageData) {
+        // Set canvas dimensions
+        aoCanvas.width = imageData.width;
+        aoCanvas.height = imageData.height;
+        
+        const ctx = aoCanvas.getContext('2d');
+        const outputData = ctx.createImageData(imageData.width, imageData.height);
+        
+        // Get the AO sampling radius
+        const samplingRadius = aoRadius ? parseInt(aoRadius.value) : 5;
+        
+        // Generate AO by analyzing edges and shadows in the image
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = imageData.width;
+        tempCanvas.height = imageData.height;
+        const tempCtx = tempCanvas.getContext('2d');
+        
+        // Draw original image to temp canvas
+        tempCtx.putImageData(imageData, 0, 0);
+        
+        // First blur the image slightly
+        tempCtx.filter = `blur(${samplingRadius/2}px)`;
+        tempCtx.drawImage(tempCanvas, 0, 0);
+        
+        // Get the blurred image data
+        const blurredData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+        
+        // Reset filter
+        tempCtx.filter = 'none';
+        
+        // Calculate edge detection (similar to normal map generation)
+        for (let y = 0; y < imageData.height; y++) {
+            for (let x = 0; x < imageData.width; x++) {
+                const idx = (y * imageData.width + x) * 4;
+                
+                // Edge detection based on neighboring pixels
+                let sumGradient = 0;
+                let samples = 0;
+                
+                // Sample neighborhood based on radius
+                for (let ky = -samplingRadius; ky <= samplingRadius; ky++) {
+                    for (let kx = -samplingRadius; kx <= samplingRadius; kx++) {
+                        if (kx === 0 && ky === 0) continue;
+                        
+                        const px = Math.min(imageData.width - 1, Math.max(0, x + kx));
+                        const py = Math.min(imageData.height - 1, Math.max(0, y + ky));
+                        
+                        const nIdx = (py * imageData.width + px) * 4;
+                        
+                        // Calculate difference with center pixel (using blurred image for softer edges)
+                        const centerVal = (blurredData.data[idx] + blurredData.data[idx + 1] + blurredData.data[idx + 2]) / 3;
+                        const neighborVal = (blurredData.data[nIdx] + blurredData.data[nIdx + 1] + blurredData.data[nIdx + 2]) / 3;
+                        
+                        // Add absolute gradient
+                        sumGradient += Math.abs(neighborVal - centerVal);
+                        samples++;
+                    }
+                }
+                
+                // Calculate average gradient
+                const avgGradient = sumGradient / samples;
+                
+                // Invert and adjust gradient for AO effect (edges and darker areas get more occlusion)
+                let aoValue = 255 - (avgGradient * 1.5); // Amplify the effect
+                
+                // Darken image based on grayscale value (darker areas typically have more occlusion)
+                const originalGray = (imageData.data[idx] + imageData.data[idx + 1] + imageData.data[idx + 2]) / 3;
+                aoValue = aoValue * 0.7 + (255 - originalGray) * 0.3;
+                
+                // Apply strength parameter
+                aoValue = Math.min(255, Math.max(0, aoValue * parseFloat(aoStrength.value) * 2));
+                
+                // Set grayscale value
+                outputData.data[idx] = aoValue;
+                outputData.data[idx + 1] = aoValue;
+                outputData.data[idx + 2] = aoValue;
+                outputData.data[idx + 3] = 255; // Alpha
+            }
+        }
+        
+        // Put the processed data back to canvas
+        ctx.putImageData(outputData, 0, 0);
+        
+        // Create AO texture
+        aoTexture = new THREE.Texture(aoCanvas);
+        aoTexture.needsUpdate = true;
+        
+        console.log("AO map generated");
+    }
+    
+    // Generate emission map
+    function generateEmissionMap(imageData) {
+        // Set canvas dimensions
+        emissionCanvas.width = imageData.width;
+        emissionCanvas.height = imageData.height;
+        
+        const ctx = emissionCanvas.getContext('2d');
+        const outputData = ctx.createImageData(imageData.width, imageData.height);
+        
+        // Basic emission map - use bright areas of the image
+        for (let i = 0; i < imageData.data.length; i += 4) {
+            const r = imageData.data[i];
+            const g = imageData.data[i + 1];
+            const b = imageData.data[i + 2];
+            
+            // Calculate brightness
+            const brightness = (r + g + b) / 3;
+            
+            // Threshold to determine emissive parts (only very bright areas)
+            const threshold = 210;
+            
+            // Only keep areas above threshold, scale by strength
+            let emissionValue = 0;
+            if (brightness > threshold) {
+                emissionValue = (brightness - threshold) / (255 - threshold) * 255 * parseFloat(emissionStrength.value);
+            }
+            
+            // For emission, we keep the color but scale intensity
+            outputData.data[i] = (r / 255) * emissionValue;
+            outputData.data[i + 1] = (g / 255) * emissionValue;
+            outputData.data[i + 2] = (b / 255) * emissionValue;
+            outputData.data[i + 3] = 255; // Alpha
+        }
+        
+        // Put the processed data back to canvas
+        ctx.putImageData(outputData, 0, 0);
+        
+        // Create emission texture
+        emissionTexture = new THREE.Texture(emissionCanvas);
+        emissionTexture.needsUpdate = true;
+        
+        console.log("Emission map generated");
+    }
+    
+    // Update textures based on slider values
+    function updateTextures() {
+        // Update display values
+        baseValue.textContent = parseFloat(baseStrength.value).toFixed(1);
+        normalValue.textContent = parseFloat(normalStrength.value).toFixed(1);
+        roughnessValue.textContent = parseFloat(roughnessStrength.value).toFixed(1);
+        displacementValue.textContent = parseFloat(displacementStrength.value).toFixed(1);
+        aoValue.textContent = parseFloat(aoStrength.value).toFixed(1);
+        
+        // Regenerate relevant texture maps if we have image data
+        if (originalImageData) {
+            const imgData = seamlessModeActive && seamlessImageData ? seamlessImageData : originalImageData;
+            const img = new Image();
+            img.onload = function() {
+                // Generate maps based on which slider was changed
+                if (baseStrength.value !== '1.0') generateBaseMap(img);
+                generateNormalMap(imgData);
+                generateRoughnessMap(imgData);
+                generateDisplacementMap(imgData);
+                generateAOMap(imgData);
+                
+                // Update model
+                createModel();
+            };
+            
+            // Create a temporary canvas to convert image data to data URL
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = imgData.width;
+            tempCanvas.height = imgData.height;
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.putImageData(imgData, 0, 0);
+            img.src = tempCanvas.toDataURL();
+        }
+        
+        // Check if we need to update the model material
+        if (currentModel && currentModel.material) {
+            // Update normal map intensity
+            if (currentModel.material.normalMap) {
+                currentModel.material.normalScale.set(
+                    parseFloat(normalStrength.value),
+                    parseFloat(normalStrength.value)
+                );
+            }
+            
+            // Update displacement map intensity
+            if (currentModel.material.displacementMap) {
+                currentModel.material.displacementScale = parseFloat(displacementStrength.value);
+            }
+            
+            // Make sure material updates
+            currentModel.material.needsUpdate = true;
+        }
+    }
+    
+    // Update material properties
+    function updateMaterial() {
+        // Update display values
+        metalnessValue.textContent = parseFloat(metalness.value).toFixed(1);
+        if (emissionValue) {
+            emissionValue.textContent = parseFloat(emissionStrength.value).toFixed(1);
+        }
+        
+        if (currentModel && currentModel.material) {
+            currentModel.material.metalness = parseFloat(metalness.value);
+            
+            // Update emission if we have an emission map
+            if (currentModel.material.emissiveMap) {
+                currentModel.material.emissiveIntensity = parseFloat(emissionStrength.value);
+            }
+            
+            currentModel.material.needsUpdate = true;
+        }
+        
+        // Regenerate emission map if emission strength changed
+        if (originalImageData) {
+            const imgData = seamlessModeActive && seamlessImageData ? seamlessImageData : originalImageData;
+            generateEmissionMap(imgData);
+            createModel();
+        }
+    }
+    
+    // Update light position
+    function updateLightPosition() {
+        if (light) {
+            light.position.set(
+                parseFloat(lightX.value),
+                parseFloat(lightY.value),
+                parseFloat(lightZ.value)
+            );
+        }
+    }
+    
+    // Download texture as image
+    function downloadTexture(canvas, filename) {
+        if (!hasUploadedImage) {
+            showNotification('Please upload a texture first', 'error');
+            return;
+        }
+        
+        const link = document.createElement('a');
+        
+        // Get selected format
+        let format = 'png';
+        formatRadios.forEach(radio => {
+            if (radio.checked) {
+                format = radio.value;
+            }
+        });
+        
+        link.download = `${filename}.${format}`;
+        link.href = canvas.toDataURL(`image/${format}`);
+        link.click();
+        
+        showNotification(`${filename.split('-')[0]} map downloaded`, 'success');
+    }
+    
+    // Export all selected maps as a ZIP file
+    function exportAllMapsAsZip() {
+        if (!hasUploadedImage) {
+            showNotification('Please upload a texture first', 'error');
+            return;
+        }
+        
+        if (typeof JSZip === 'undefined' || typeof saveAs === 'undefined') {
+            showNotification('ZIP export libraries not loaded. Please refresh and try again.', 'error');
+            return;
+        }
+        
+        const zip = new JSZip();
+        const textureBaseName = 'texture';
+        let exportCount = 0;
+        
+        // Show processing indicator
+        showLoadingIndicator('Packaging texture maps...', 10);
+        
+        // Get selected export format
+        let format = 'png';
+        let mimeType = 'image/png';
+        
+        formatRadios.forEach(radio => {
+            if (radio.checked) {
+                format = radio.value;
+                mimeType = `image/${format}`;
+            }
+        });
+        
+        // Add selected maps to ZIP
+        if (exportBase.checked && baseCanvas) {
+            zip.file(`${textureBaseName}_basecolor.${format}`, dataURLToBlob(baseCanvas.toDataURL(mimeType)), {base64: false});
+            exportCount++;
+            updateProgress(20);
+        }
+        
+        if (exportNormal.checked && normalCanvas) {
+            zip.file(`${textureBaseName}_normal.${format}`, dataURLToBlob(normalCanvas.toDataURL(mimeType)), {base64: false});
+            exportCount++;
+            updateProgress(40);
+        }
+        
+        if (exportRoughness.checked && roughnessCanvas) {
+            zip.file(`${textureBaseName}_roughness.${format}`, dataURLToBlob(roughnessCanvas.toDataURL(mimeType)), {base64: false});
+            exportCount++;
+            updateProgress(60);
+        }
+        
+        if (exportDisplacement.checked && displacementCanvas) {
+            zip.file(`${textureBaseName}_displacement.${format}`, dataURLToBlob(displacementCanvas.toDataURL(mimeType)), {base64: false});
+            exportCount++;
+            updateProgress(70);
+        }
+        
+        if (exportAO.checked && aoCanvas) {
+            zip.file(`${textureBaseName}_ao.${format}`, dataURLToBlob(aoCanvas.toDataURL(mimeType)), {base64: false});
+            exportCount++;
+            updateProgress(80);
+        }
+        
+        if (exportEmission && exportEmission.checked && emissionCanvas) {
+            zip.file(`${textureBaseName}_emission.${format}`, dataURLToBlob(emissionCanvas.toDataURL(mimeType)), {base64: false});
+            exportCount++;
+            updateProgress(85);
+        }
+        
+        if (exportCount === 0) {
+            hideLoadingIndicator();
+            showNotification('Please select at least one map to export', 'warning');
+            return;
+        }
+        
+        updateLoadingMessage('Creating ZIP file...');
+        
+        // Generate and download the ZIP file
+        zip.generateAsync({type: 'blob'})
+            .then(function(content) {
+                updateProgress(100);
+                saveAs(content, `${textureBaseName}_maps.zip`);
+                setTimeout(() => {
+                    hideLoadingIndicator();
+                    showNotification(`${exportCount} texture maps exported successfully!`, 'success');
+                }, 500);
+            })
+            .catch(function(error) {
+                console.error('Error creating ZIP file:', error);
+                hideLoadingIndicator();
+                showNotification('Error creating ZIP file. Please try again.', 'error');
+            });
+    }
+    
+    // Convert Data URL to Blob for ZIP file
+    function dataURLToBlob(dataURL) {
+        const parts = dataURL.split(';base64,');
+        const contentType = parts[0].split(':')[1];
+        const raw = window.atob(parts[1]);
+        const rawLength = raw.length;
+        const uInt8Array = new Uint8Array(rawLength);
+        
+        for (let i = 0; i < rawLength; ++i) {
+            uInt8Array[i] = raw.charCodeAt(i);
+        }
+        
+        return new Blob([uInt8Array], {type: contentType});
+    }
+    
+    // Toggle auto-rotation
+    function toggleAutoRotation() {
+        autoRotate = !autoRotate;
+        if (autoRotate) {
+            toggleAutoRotateBtn.classList.add('active');
+            showNotification('Auto-rotation enabled', 'info');
+        } else {
+            toggleAutoRotateBtn.classList.remove('active');
+            showNotification('Auto-rotation disabled', 'info');
+        }
+    }
+    
+    // Update rotation from sliders
+    function updateRotation() {
+        if (!currentModel) return;
+        
+        // Disable auto-rotate when user drags sliders
+        if (!isDraggingSlider) {
+            isDraggingSlider = true;
+            autoRotate = false;
+            toggleAutoRotateBtn.classList.remove('active');
+        }
+        
+        // Apply rotation from sliders
+        currentModel.rotation.x = parseFloat(rotationX.value);
+        currentModel.rotation.y = parseFloat(rotationY.value);
+    }
+    
+    // Export Three.js code
+    function exportThreejsCode() {
+        if (!hasUploadedImage) {
+            showNotification('Please upload a texture first', 'error');
+            return;
+        }
+        
+        // Show loading indicator
+        showLoadingIndicator('Generating Three.js code...', 50);
+        
+        // Get current UV settings
+        const repeatX = parseInt(uvRepeatX.value) || 1;
+        const repeatY = parseInt(uvRepeatY.value) || 1;
+        const offsetX = parseFloat(uvOffsetX.value) || 0;
+        const offsetY = parseFloat(uvOffsetY.value) || 0;
+        const rotation = parseFloat(uvRotation.value) || 0;
+        
+        // Create sample Three.js code with current settings
+        const code = `// Three.js Material Example with Exported Textures
+import * as THREE from 'three';
+
+// Create a scene, camera, and renderer
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.z = 5;
+
+const renderer = new THREE.WebGLRenderer({ 
+    antialias: true,
+    alpha: true
+});
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
+document.body.appendChild(renderer.domElement);
+
+// Load textures
+const textureLoader = new THREE.TextureLoader();
+const baseTexture = textureLoader.load('texture_basecolor.${formatRadios[0].checked ? 'png' : formatRadios[1].checked ? 'webp' : 'jpg'}');
+const normalTexture = textureLoader.load('texture_normal.${formatRadios[0].checked ? 'png' : formatRadios[1].checked ? 'webp' : 'jpg'}');
+const roughnessTexture = textureLoader.load('texture_roughness.${formatRadios[0].checked ? 'png' : formatRadios[1].checked ? 'webp' : 'jpg'}');
+const displacementTexture = textureLoader.load('texture_displacement.${formatRadios[0].checked ? 'png' : formatRadios[1].checked ? 'webp' : 'jpg'}');
+const aoTexture = textureLoader.load('texture_ao.${formatRadios[0].checked ? 'png' : formatRadios[1].checked ? 'webp' : 'jpg'}');
+${parseFloat(emissionStrength.value) > 0 ? `const emissionTexture = textureLoader.load('texture_emission.${formatRadios[0].checked ? 'png' : formatRadios[1].checked ? 'webp' : 'jpg'}');` : ""}
+
+// Set up texture properties
+const textures = [baseTexture, normalTexture, roughnessTexture, displacementTexture, aoTexture${parseFloat(emissionStrength.value) > 0 ? ", emissionTexture" : ""}];
+textures.forEach(texture => {
+    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(${repeatX}, ${repeatY});
+    texture.offset.set(${offsetX}, ${offsetY});
+    texture.rotation = ${rotation} * Math.PI / 180;
+    texture.center.set(0.5, 0.5); // Set rotation center
+});
+
+// Create material with all maps
+const material = new THREE.MeshStandardMaterial({
+    map: baseTexture,
+    normalMap: normalTexture,
+    roughnessMap: roughnessTexture,
+    displacementMap: displacementTexture,
+    aoMap: aoTexture,
+    ${parseFloat(emissionStrength.value) > 0 ? `emissiveMap: emissionTexture,\n    emissive: new THREE.Color(0xffffff),\n    emissiveIntensity: ${emissionStrength.value},` : ""}
+    normalScale: new THREE.Vector2(${normalStrength.value}, ${normalStrength.value}),
+    roughness: ${roughnessStrength.value},
+    metalness: ${metalness.value},
+    displacementScale: ${displacementStrength.value}
+});
+
+// Create sphere geometry
+const geometry = new THREE.SphereGeometry(1, 64, 64);
+
+// For ambient occlusion to work, we need UV2
+geometry.setAttribute('uv2', geometry.attributes.uv);
+
+// Create mesh
+const mesh = new THREE.Mesh(geometry, material);
+scene.add(mesh);
+
+// Add lights
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+scene.add(ambientLight);
+
+const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
+directionalLight.position.set(${lightX.value}, ${lightY.value}, ${lightZ.value});
+scene.add(directionalLight);
+
+// Add subtle hemisphere light for better detail visibility
+const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.3);
+hemiLight.position.set(0, 20, 0);
+scene.add(hemiLight);
+
+// Animation loop
+function animate() {
+    requestAnimationFrame(animate);
+    
+    // Rotation animation
+    mesh.rotation.y += 0.005;
+    
+    renderer.render(scene, camera);
+}
+
+animate();
+
+// Handle window resize
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});`;
+        
+        // Simulate processing delay
+        setTimeout(() => {
+            // Create a download link for the code
+            updateProgress(100);
+            
+            const blob = new Blob([code], { type: 'text/javascript' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'texture_material.js';
+            link.click();
+            
+            hideLoadingIndicator();
+            showNotification('Three.js code exported successfully', 'success');
+        }, 800);
+    }
+});
