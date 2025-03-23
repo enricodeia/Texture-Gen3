@@ -19,7 +19,6 @@
             </div>
             <div class="nav-tabs">
                 <button class="nav-tab active" data-page="generator">Generator</button>
-                <button class="nav-tab" data-page="uv-editor">UV Editor</button>
                 <button class="nav-tab" data-page="help">Help</button>
                 <button class="nav-tab" data-page="about">About</button>
             </div>
@@ -106,13 +105,6 @@
                     <div class="preview-3d">
                         <div id="model-container"></div>
                         <div class="model-controls">
-                            <div class="model-tabs">
-                                <button class="model-tab active" data-model="sphere">Sphere</button>
-                                <button class="model-tab" data-model="cube">Cube</button>
-                                <button class="model-tab" data-model="plane">Plane</button>
-                                <button class="model-tab" data-model="cylinder">Cylinder</button>
-                            </div>
-                            
                             <div class="rotation-controls">
                                 <div class="rotation-group">
                                     <label>Rotation:</label>
@@ -141,7 +133,7 @@
                         <div class="controls-tabs">
                             <button class="controls-tab active" data-controls="basic">Basic</button>
                             <button class="controls-tab" data-controls="advanced">Advanced</button>
-                            <button class="controls-tab" data-controls="projection">Projection</button>
+                            <button class="controls-tab" data-controls="projection">Tiling</button>
                         </div>
                     </div>
                     
@@ -195,14 +187,6 @@
                                     <span class="value" id="metalness-value">0.0</span>
                                 </div>
                             </div>
-                            
-                            <div class="control-group">
-                                <label for="emission-strength">Emission Strength</label>
-                                <div class="slider-container">
-                                    <input type="range" id="emission-strength" min="0" max="1" step="0.01" value="0">
-                                    <span class="value" id="emission-value">0.0</span>
-                                </div>
-                            </div>
                         </div>
                     </div>
                     
@@ -250,7 +234,7 @@
                         </div>
                     </div>
                     
-                    <!-- Projection Controls Tab -->
+                    <!-- Tiling Controls Tab (Replaces Projection) -->
                     <div class="controls-panel" id="projection-controls">
                         <div class="controls-grid">
                             <div class="control-group">
@@ -326,10 +310,6 @@
                         <div class="export-checkbox">
                             <input type="checkbox" id="export-ao" checked>
                             <label for="export-ao">Ambient Occlusion</label>
-                        </div>
-                        <div class="export-checkbox">
-                            <input type="checkbox" id="export-emission">
-                            <label for="export-emission">Emission</label>
                         </div>
                     </div>
                     
@@ -419,134 +399,9 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="map-preview">
-                            <div class="map-header">
-                                <h4>Emission Map</h4>
-                                <button class="download-btn" id="download-emission" title="Download Emission Map">
-                                    <i class="fas fa-download"></i>
-                                </button>
-                            </div>
-                            <div class="canvas-wrapper">
-                                <canvas id="emission-map"></canvas>
-                                <div class="map-overlay">
-                                    <span class="map-label">Emission</span>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </main>
-        </div>
-
-        <!-- UV Editor Page -->
-        <div class="page-content hidden" id="uv-editor-page">
-            <div class="uv-editor-container">
-                <div class="uv-editor-main">
-                    <div class="uv-canvas-container">
-                        <canvas id="uv-canvas"></canvas>
-                        <div class="uv-overlay">
-                            <div class="uv-controls">
-                                <button id="uv-pan" class="uv-tool active" title="Pan View"><i class="fas fa-hand-paper"></i></button>
-                                <button id="uv-select" class="uv-tool" title="Select Islands"><i class="fas fa-object-group"></i></button>
-                                <button id="uv-move" class="uv-tool" title="Move Selection"><i class="fas fa-arrows-alt"></i></button>
-                                <button id="uv-rotate" class="uv-tool" title="Rotate Selection"><i class="fas fa-sync"></i></button>
-                                <button id="uv-scale" class="uv-tool" title="Scale Selection"><i class="fas fa-expand-arrows-alt"></i></button>
-                            </div>
-                            <div class="uv-zoom-controls">
-                                <button id="uv-zoom-in" title="Zoom In"><i class="fas fa-search-plus"></i></button>
-                                <button id="uv-zoom-out" title="Zoom Out"><i class="fas fa-search-minus"></i></button>
-                                <button id="uv-reset" title="Reset View"><i class="fas fa-home"></i></button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="uv-preview">
-                        <h4>3D Preview</h4>
-                        <div id="uv-model-container"></div>
-                    </div>
-                </div>
-                <div class="uv-editor-sidebar">
-                    <div class="uv-editor-section">
-                        <h4>UV Transformation</h4>
-                        <div class="uv-editor-controls">
-                            <div class="control-group">
-                                <label for="uv-edit-pos-x">Position X</label>
-                                <div class="number-input">
-                                    <input type="number" id="uv-edit-pos-x" step="0.01" value="0">
-                                </div>
-                            </div>
-                            <div class="control-group">
-                                <label for="uv-edit-pos-y">Position Y</label>
-                                <div class="number-input">
-                                    <input type="number" id="uv-edit-pos-y" step="0.01" value="0">
-                                </div>
-                            </div>
-                            <div class="control-group">
-                                <label for="uv-edit-rotation">Rotation</label>
-                                <div class="number-input">
-                                    <input type="number" id="uv-edit-rotation" step="1" value="0">
-                                </div>
-                            </div>
-                            <div class="control-group">
-                                <label for="uv-edit-scale-x">Scale X</label>
-                                <div class="number-input">
-                                    <input type="number" id="uv-edit-scale-x" step="0.01" min="0.01" value="1">
-                                </div>
-                            </div>
-                            <div class="control-group">
-                                <label for="uv-edit-scale-y">Scale Y</label>
-                                <div class="number-input">
-                                    <input type="number" id="uv-edit-scale-y" step="0.01" min="0.01" value="1">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="uv-editor-section">
-                        <h4>UV Operations</h4>
-                        <div class="uv-operations">
-                            <button id="uv-unwrap" class="uv-op-btn">Unwrap</button>
-                            <button id="uv-reset-all" class="uv-op-btn">Reset All</button>
-                            <button id="uv-pack" class="uv-op-btn">Pack Islands</button>
-                            <button id="uv-mirror-h" class="uv-op-btn">Mirror Horizontal</button>
-                            <button id="uv-mirror-v" class="uv-op-btn">Mirror Vertical</button>
-                        </div>
-                    </div>
-                    
-                    <div class="uv-editor-section">
-                        <h4>Display Options</h4>
-                        <div class="uv-display-options">
-                            <div class="option-checkbox">
-                                <input type="checkbox" id="uv-show-grid" checked>
-                                <label for="uv-show-grid">Show Grid</label>
-                            </div>
-                            <div class="option-checkbox">
-                                <input type="checkbox" id="uv-show-checkerboard" checked>
-                                <label for="uv-show-checkerboard">Show Checkerboard</label>
-                            </div>
-                            <div class="option-checkbox">
-                                <input type="checkbox" id="uv-show-texture" checked>
-                                <label for="uv-show-texture">Show Texture</label>
-                            </div>
-                            <div class="option-checkbox">
-                                <input type="checkbox" id="uv-show-seams">
-                                <label for="uv-show-seams">Highlight Seams</label>
-                            </div>
-                            <div class="control-group">
-                                <label for="uv-overlay-opacity">Texture Opacity</label>
-                                <div class="slider-container">
-                                    <input type="range" id="uv-overlay-opacity" min="0" max="1" step="0.1" value="0.7">
-                                    <span class="value" id="uv-overlay-opacity-value">0.7</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="uv-editor-actions">
-                        <button id="uv-apply" class="action-btn">Apply Changes</button>
-                        <button id="uv-cancel" class="action-btn secondary">Cancel</button>
-                    </div>
-                </div>
-            </div>
         </div>
 
         <!-- Help Page -->
@@ -562,7 +417,7 @@
                     <ol>
                         <li>Upload a texture image using drag & drop or the browse button</li>
                         <li>Adjust texture settings to your liking</li>
-                        <li>Preview the results on different 3D models</li>
+                        <li>Preview the results on the 3D sphere</li>
                         <li>Export individual maps or all maps as a ZIP file</li>
                     </ol>
                 </div>
@@ -575,13 +430,10 @@
                             algorithms to get the best results for your specific texture.
                         </li>
                         <li>
-                            <strong>Enhanced UV Controls:</strong> More precise control over texture projection with separate X/Y repeat, offset, rotation, and scale.
+                            <strong>Enhanced Tiling Controls:</strong> More precise control over texture tiling with separate X/Y repeat, offset, rotation, and scale.
                         </li>
                         <li>
-                            <strong>UV Editor:</strong> Edit UV mapping directly with the new UV Editor tab. Reposition, scale, and rotate UV islands.
-                        </li>
-                        <li>
-                            <strong>Multiple 3D Preview Models:</strong> View your textures on various 3D shapes including sphere, cube, cylinder, and plane.
+                            <strong>Improved PBR Workflow:</strong> Focus on creating high-quality base color, normal, roughness, displacement, and AO maps.
                         </li>
                     </ul>
                 </div>
@@ -639,11 +491,10 @@
                 <div class="about-section">
                     <h3>Features</h3>
                     <ul>
-                        <li>Generate Base Color, Normal, Roughness, Displacement, AO, and Emission maps</li>
-                        <li>Live 3D preview with multiple model options</li>
+                        <li>Generate Base Color, Normal, Roughness, Displacement, and AO maps</li>
+                        <li>Live 3D preview with high-quality sphere model</li>
                         <li>Seamless texture creation</li>
-                        <li>Advanced UV projection controls</li>
-                        <li>Integrated UV editor</li>
+                        <li>Advanced texture tiling controls</li>
                         <li>Smart material enhancement</li>
                         <li>Export individual maps or complete texture sets</li>
                         <li>Generate Three.js code for your materials</li>
