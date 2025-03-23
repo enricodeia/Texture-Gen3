@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Texture Gen v3</title>
+    <title>Texture Gen v2</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,7 +14,7 @@
     <div class="app-container">
         <nav class="navbar">
             <div class="nav-brand">
-                <h1>Texture Gen <span class="version">v3</span></h1>
+                <h1>Texture Gen <span class="version">v2</span></h1>
                 <p>Create professional PBR texture maps instantly</p>
             </div>
             <div class="nav-tabs">
@@ -24,11 +24,18 @@
             </div>
             <div class="nav-actions">
                 <button id="export-zip" class="action-btn export-zip-btn">
-                    <i class="fas fa-file-archive"></i> Export All Maps
+                    <i class="fas fa-file-archive"></i> Export All Maps as ZIP
                 </button>
                 <button id="export-threejs" class="action-btn export-code-btn">
-                    <i class="fas fa-code"></i> Export Three.js
+                    <i class="fas fa-code"></i> Export Three.js Code
                 </button>
+                <!-- Theme toggle button -->
+                <div class="theme-toggle">
+                    <button id="theme-switch" class="theme-switch-btn" title="Toggle Dark/Light Mode">
+                        <i class="fas fa-moon"></i>
+                        <i class="fas fa-sun" style="display: none;"></i>
+                    </button>
+                </div>
             </div>
         </nav>
 
@@ -50,77 +57,40 @@
                                 <button class="delete-btn" id="delete-image">Delete Texture</button>
                             </div>
                         </div>
-                        
-                        <!-- Material Type & Seamless Controls -->
-                        <div class="material-controls">
-                            <div class="control-group">
-                                <label for="material-type">Material Type:</label>
-                                <select id="material-type" class="material-select">
-                                    <option value="auto">Auto-Detect</option>
-                                    <option value="metal">Metal</option>
-                                    <option value="wood">Wood</option>
-                                    <option value="stone">Stone</option>
-                                    <option value="fabric">Fabric</option>
-                                    <option value="plastic">Plastic</option>
-                                </select>
-                            </div>
-                            
-                            <div class="control-buttons">
-                                <button id="smart-enhance" class="control-btn smart-enhance-btn">
-                                    <i class="fas fa-magic"></i> Smart Enhance
-                                </button>
-                                <button id="make-seamless" class="control-btn seamless-btn">
-                                    <i class="fas fa-repeat"></i> Make Seamless
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <!-- Seamless Options Panel (hidden by default) -->
-                        <div class="seamless-panel" id="seamless-panel">
-                            <h4>Seamless Options</h4>
-                            <div class="seamless-controls">
-                                <div class="control-group">
-                                    <label for="seamless-strength">Blend Strength</label>
-                                    <div class="slider-container">
-                                        <input type="range" id="seamless-strength" min="0" max="1" step="0.01" value="0.5">
-                                        <span class="value" id="seamless-strength-value">0.5</span>
-                                    </div>
-                                </div>
-                                <div class="control-group">
-                                    <label for="seamless-method">Method</label>
-                                    <select id="seamless-method" class="seamless-select">
-                                        <option value="mirror">Mirror Edges</option>
-                                        <option value="blend">Edge Blend</option>
-                                        <option value="wrap">Wrap Around</option>
-                                    </select>
-                                </div>
-                                <div class="seamless-buttons">
-                                    <button id="apply-seamless" class="control-btn">Apply</button>
-                                    <button id="cancel-seamless" class="control-btn secondary">Cancel</button>
-                                </div>
-                            </div>
+                        <!-- Material Type Selection -->
+                        <div class="material-type-selector">
+                            <label for="material-type">Material Type:</label>
+                            <select id="material-type" class="material-select">
+                                <option value="auto">Auto-Detect</option>
+                                <option value="metal">Metal</option>
+                                <option value="wood">Wood</option>
+                                <option value="stone">Stone</option>
+                                <option value="fabric">Fabric</option>
+                                <option value="plastic">Plastic</option>
+                            </select>
+                            <button id="smart-enhance" class="smart-enhance-btn">
+                                <i class="fas fa-magic"></i> Smart Enhance
+                            </button>
                         </div>
                     </div>
                     
                     <div class="preview-3d">
                         <div id="model-container"></div>
-                        <div class="model-controls">
-                            <div class="rotation-controls">
-                                <div class="rotation-group">
-                                    <label>Rotation:</label>
-                                    <div class="rotation-sliders">
-                                        <div class="rotation-slider">
-                                            <span>X</span>
-                                            <input type="range" id="rotation-x" min="-3.14" max="3.14" step="0.01" value="0">
-                                        </div>
-                                        <div class="rotation-slider">
-                                            <span>Y</span>
-                                            <input type="range" id="rotation-y" min="-3.14" max="3.14" step="0.01" value="0">
-                                        </div>
-                                        <button id="toggle-auto-rotate" class="rotation-btn" title="Toggle Auto-Rotation">
-                                            <i class="fas fa-sync-alt"></i>
-                                        </button>
+                        <div class="rotation-controls">
+                            <div class="rotation-group">
+                                <label>Manual Rotation:</label>
+                                <div class="rotation-sliders">
+                                    <div class="rotation-slider">
+                                        <span>X</span>
+                                        <input type="range" id="rotation-x" min="-3.14" max="3.14" step="0.01" value="0">
                                     </div>
+                                    <div class="rotation-slider">
+                                        <span>Y</span>
+                                        <input type="range" id="rotation-y" min="-3.14" max="3.14" step="0.01" value="0">
+                                    </div>
+                                    <button id="toggle-auto-rotate" class="rotation-btn" title="Toggle Auto-Rotation">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -128,160 +98,93 @@
                 </div>
 
                 <div class="controls-container">
-                    <div class="controls-header">
-                        <h3>Texture Settings</h3>
-                        <div class="controls-tabs">
-                            <button class="controls-tab active" data-controls="basic">Basic</button>
-                            <button class="controls-tab" data-controls="advanced">Advanced</button>
-                            <button class="controls-tab" data-controls="projection">Tiling</button>
-                        </div>
-                    </div>
-                    
-                    <!-- Basic Controls Tab (default) -->
-                    <div class="controls-panel active" id="basic-controls">
-                        <div class="controls-grid">
-                            <div class="control-group">
-                                <label for="base-strength">Base Color Strength</label>
-                                <div class="slider-container">
-                                    <input type="range" id="base-strength" min="0" max="1" step="0.01" value="1">
-                                    <span class="value" id="base-value">1.0</span>
-                                </div>
-                            </div>
-                            
-                            <div class="control-group">
-                                <label for="normal-strength">Normal Strength</label>
-                                <div class="slider-container">
-                                    <input type="range" id="normal-strength" min="0" max="2" step="0.01" value="1">
-                                    <span class="value" id="normal-value">1.0</span>
-                                </div>
-                            </div>
-                            
-                            <div class="control-group">
-                                <label for="roughness-strength">Roughness Strength</label>
-                                <div class="slider-container">
-                                    <input type="range" id="roughness-strength" min="0" max="1" step="0.01" value="0.5">
-                                    <span class="value" id="roughness-value">0.5</span>
-                                </div>
-                            </div>
-                            
-                            <div class="control-group">
-                                <label for="displacement-strength">Displacement Strength</label>
-                                <div class="slider-container">
-                                    <input type="range" id="displacement-strength" min="0" max="1" step="0.01" value="0.2">
-                                    <span class="value" id="displacement-value">0.2</span>
-                                </div>
-                            </div>
-                            
-                            <div class="control-group">
-                                <label for="ao-strength">AO Strength</label>
-                                <div class="slider-container">
-                                    <input type="range" id="ao-strength" min="0" max="1" step="0.01" value="0.5">
-                                    <span class="value" id="ao-value">0.5</span>
-                                </div>
-                            </div>
-                            
-                            <div class="control-group">
-                                <label for="metalness">Metalness</label>
-                                <div class="slider-container">
-                                    <input type="range" id="metalness" min="0" max="1" step="0.01" value="0">
-                                    <span class="value" id="metalness-value">0.0</span>
-                                </div>
+                    <h3>Texture Settings</h3>
+                    <div class="controls-grid">
+                        <div class="control-group">
+                            <label for="base-strength">Base Color Strength</label>
+                            <div class="slider-container">
+                                <input type="range" id="base-strength" min="0" max="1" step="0.01" value="1">
+                                <span class="value" id="base-value">1.0</span>
                             </div>
                         </div>
-                    </div>
-                    
-                    <!-- Advanced Controls Tab -->
-                    <div class="controls-panel" id="advanced-controls">
-                        <div class="controls-grid">
-                            <div class="control-group light-group">
-                                <label>Light Position</label>
-                                <div class="light-controls">
-                                    <div class="light-control">
-                                        <span>X</span>
-                                        <input type="range" id="light-x" min="-10" max="10" step="0.1" value="5">
-                                    </div>
-                                    <div class="light-control">
-                                        <span>Y</span>
-                                        <input type="range" id="light-y" min="-10" max="10" step="0.1" value="5">
-                                    </div>
-                                    <div class="light-control">
-                                        <span>Z</span>
-                                        <input type="range" id="light-z" min="-10" max="10" step="0.1" value="5">
-                                    </div>
-                                    <div class="hdri-toggle">
-                                        <input type="checkbox" id="use-hdri" class="toggle-input">
-                                        <label for="use-hdri" class="toggle-label">Use HDRI Lighting</label>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="control-group">
-                                <label for="normal-algorithm">Normal Map Algorithm</label>
-                                <select id="normal-algorithm" class="control-select">
-                                    <option value="sobel">Sobel (Standard)</option>
-                                    <option value="enhanced">Enhanced Detail</option>
-                                    <option value="prewitt">Prewitt</option>
-                                </select>
-                            </div>
-                            
-                            <div class="control-group">
-                                <label for="ao-radius">AO Sampling Radius</label>
-                                <div class="slider-container">
-                                    <input type="range" id="ao-radius" min="1" max="10" step="1" value="5">
-                                    <span class="value" id="ao-radius-value">5</span>
-                                </div>
+                        
+                        <div class="control-group">
+                            <label for="normal-strength">Normal Strength</label>
+                            <div class="slider-container">
+                                <input type="range" id="normal-strength" min="0" max="2" step="0.01" value="1">
+                                <span class="value" id="normal-value">1.0</span>
                             </div>
                         </div>
-                    </div>
-                    
-                    <!-- Tiling Controls Tab (Replaces Projection) -->
-                    <div class="controls-panel" id="projection-controls">
-                        <div class="controls-grid">
-                            <div class="control-group">
-                                <label for="uv-repeat-x">Repeat X</label>
-                                <div class="slider-container">
-                                    <input type="range" id="uv-repeat-x" min="1" max="10" step="1" value="1">
-                                    <span class="value" id="uv-repeat-x-value">1</span>
-                                </div>
+                        
+                        <div class="control-group">
+                            <label for="roughness-strength">Roughness Strength</label>
+                            <div class="slider-container">
+                                <input type="range" id="roughness-strength" min="0" max="1" step="0.01" value="0.5">
+                                <span class="value" id="roughness-value">0.5</span>
                             </div>
-                            
-                            <div class="control-group">
-                                <label for="uv-repeat-y">Repeat Y</label>
-                                <div class="slider-container">
-                                    <input type="range" id="uv-repeat-y" min="1" max="10" step="1" value="1">
-                                    <span class="value" id="uv-repeat-y-value">1</span>
-                                </div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label for="displacement-strength">Displacement Strength</label>
+                            <div class="slider-container">
+                                <input type="range" id="displacement-strength" min="0" max="1" step="0.01" value="0.2">
+                                <span class="value" id="displacement-value">0.2</span>
                             </div>
-                            
-                            <div class="control-group">
-                                <label for="uv-offset-x">Offset X</label>
-                                <div class="slider-container">
-                                    <input type="range" id="uv-offset-x" min="-1" max="1" step="0.01" value="0">
-                                    <span class="value" id="uv-offset-x-value">0.00</span>
-                                </div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label for="ao-strength">AO Strength</label>
+                            <div class="slider-container">
+                                <input type="range" id="ao-strength" min="0" max="1" step="0.01" value="0.5">
+                                <span class="value" id="ao-value">0.5</span>
                             </div>
-                            
-                            <div class="control-group">
-                                <label for="uv-offset-y">Offset Y</label>
-                                <div class="slider-container">
-                                    <input type="range" id="uv-offset-y" min="-1" max="1" step="0.01" value="0">
-                                    <span class="value" id="uv-offset-y-value">0.00</span>
-                                </div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label for="metalness">Metalness</label>
+                            <div class="slider-container">
+                                <input type="range" id="metalness" min="0" max="1" step="0.01" value="0">
+                                <span class="value" id="metalness-value">0.0</span>
                             </div>
-                            
-                            <div class="control-group">
-                                <label for="uv-rotation">Rotation (degrees)</label>
-                                <div class="slider-container">
-                                    <input type="range" id="uv-rotation" min="0" max="360" step="1" value="0">
-                                    <span class="value" id="uv-rotation-value">0°</span>
-                                </div>
+                        </div>
+                        
+                        <!-- Emission control -->
+                        <div class="control-group">
+                            <label for="emission-strength">Emission Strength</label>
+                            <div class="slider-container">
+                                <input type="range" id="emission-strength" min="0" max="1" step="0.01" value="0">
+                                <span class="value" id="emission-value">0.0</span>
                             </div>
-                            
-                            <div class="control-group">
-                                <label for="uv-scale">Scale</label>
-                                <div class="slider-container">
-                                    <input type="range" id="uv-scale" min="0.1" max="5" step="0.1" value="1">
-                                    <span class="value" id="uv-scale-value">1.0</span>
+                        </div>
+                        
+                        <!-- UV Tiling control -->
+                        <div class="control-group">
+                            <label for="uv-repeat">UV Tiling</label>
+                            <div class="slider-container">
+                                <input type="range" id="uv-repeat" min="1" max="10" step="1" value="1">
+                                <span class="value" id="uv-value">1</span>
+                            </div>
+                        </div>
+                        
+                        <div class="control-group light-group">
+                            <label>Light Position</label>
+                            <div class="light-controls">
+                                <div class="light-control">
+                                    <span>X</span>
+                                    <input type="range" id="light-x" min="-10" max="10" step="0.1" value="5">
+                                </div>
+                                <div class="light-control">
+                                    <span>Y</span>
+                                    <input type="range" id="light-y" min="-10" max="10" step="0.1" value="5">
+                                </div>
+                                <div class="light-control">
+                                    <span>Z</span>
+                                    <input type="range" id="light-z" min="-10" max="10" step="0.1" value="5">
+                                </div>
+                                <!-- HDRI lighting toggle -->
+                                <div class="hdri-toggle">
+                                    <input type="checkbox" id="use-hdri" class="toggle-input">
+                                    <label for="use-hdri" class="toggle-label">Use HDRI Lighting</label>
                                 </div>
                             </div>
                         </div>
@@ -311,8 +214,14 @@
                             <input type="checkbox" id="export-ao" checked>
                             <label for="export-ao">Ambient Occlusion</label>
                         </div>
+                        <!-- Emission export option -->
+                        <div class="export-checkbox">
+                            <input type="checkbox" id="export-emission">
+                            <label for="export-emission">Emission</label>
+                        </div>
                     </div>
                     
+                    <!-- Format options -->
                     <div class="format-options">
                         <label>Export Format:</label>
                         <div class="format-toggle">
@@ -399,6 +308,21 @@
                                 </div>
                             </div>
                         </div>
+                        <!-- Emission Map preview -->
+                        <div class="map-preview">
+                            <div class="map-header">
+                                <h4>Emission Map</h4>
+                                <button class="download-btn" id="download-emission" title="Download Emission Map">
+                                    <i class="fas fa-download"></i>
+                                </button>
+                            </div>
+                            <div class="canvas-wrapper">
+                                <canvas id="emission-map"></canvas>
+                                <div class="map-overlay">
+                                    <span class="map-label">Emission</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </main>
@@ -406,119 +330,12 @@
 
         <!-- Help Page -->
         <div class="page-content hidden" id="help-page">
-            <div class="help-container">
-                <h2>Help & Documentation</h2>
-                
-                <div class="help-section">
-                    <h3>Getting Started</h3>
-                    <p>Texture Gen v3 is a powerful tool for creating PBR texture maps from a single base image. This guide will help you make the most of its features.</p>
-                    
-                    <h4>Basic Workflow:</h4>
-                    <ol>
-                        <li>Upload a texture image using drag & drop or the browse button</li>
-                        <li>Adjust texture settings to your liking</li>
-                        <li>Preview the results on the 3D sphere</li>
-                        <li>Export individual maps or all maps as a ZIP file</li>
-                    </ol>
-                </div>
-                
-                <div class="help-section">
-                    <h3>New Features in v3</h3>
-                    <ul>
-                        <li>
-                            <strong>Seamless Textures:</strong> Create tileable textures with the new "Make Seamless" feature. Use different
-                            algorithms to get the best results for your specific texture.
-                        </li>
-                        <li>
-                            <strong>Enhanced Tiling Controls:</strong> More precise control over texture tiling with separate X/Y repeat, offset, rotation, and scale.
-                        </li>
-                        <li>
-                            <strong>Improved PBR Workflow:</strong> Focus on creating high-quality base color, normal, roughness, displacement, and AO maps.
-                        </li>
-                    </ul>
-                </div>
-                
-                <div class="help-section">
-                    <h3>Keyboard Shortcuts</h3>
-                    <div class="shortcuts-grid">
-                        <div class="shortcut">
-                            <kbd>Space</kbd>
-                            <span>Toggle auto-rotation</span>
-                        </div>
-                        <div class="shortcut">
-                            <kbd>E</kbd>
-                            <span>Export all maps as ZIP</span>
-                        </div>
-                        <div class="shortcut">
-                            <kbd>C</kbd>
-                            <span>Export Three.js code</span>
-                        </div>
-                        <div class="shortcut">
-                            <kbd>S</kbd>
-                            <span>Smart enhance</span>
-                        </div>
-                        <div class="shortcut">
-                            <kbd>Arrow Keys</kbd>
-                            <span>Rotate model</span>
-                        </div>
-                        <div class="shortcut">
-                            <kbd>H</kbd>
-                            <span>Toggle HDRI lighting</span>
-                        </div>
-                        <div class="shortcut">
-                            <kbd>M</kbd>
-                            <span>Make seamless</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <!-- Help page content -->
         </div>
 
         <!-- About Page -->
         <div class="page-content hidden" id="about-page">
-            <div class="about-container">
-                <h2>About Texture Gen v3</h2>
-                
-                <div class="about-section">
-                    <h3>What is Texture Gen?</h3>
-                    <p>
-                        Texture Gen is a professional PBR texture generation tool that allows you to create a 
-                        complete set of texture maps from a single input image. Perfect for game developers, 
-                        3D artists, and designers who need high-quality materials quickly.
-                    </p>
-                </div>
-                
-                <div class="about-section">
-                    <h3>Features</h3>
-                    <ul>
-                        <li>Generate Base Color, Normal, Roughness, Displacement, and AO maps</li>
-                        <li>Live 3D preview with high-quality sphere model</li>
-                        <li>Seamless texture creation</li>
-                        <li>Advanced texture tiling controls</li>
-                        <li>Smart material enhancement</li>
-                        <li>Export individual maps or complete texture sets</li>
-                        <li>Generate Three.js code for your materials</li>
-                    </ul>
-                </div>
-                
-                <div class="about-section">
-                    <h3>Credits</h3>
-                    <p>
-                        Designed and developed by <a href="https://enricodeiana.design/" target="_blank">Enrico Deiana</a>.<br>
-                        Built with Three.js, JSZip, and FileSaver.js.
-                    </p>
-                    <p>
-                        Have suggestions or found a bug? Please reach out at 
-                        <a href="mailto:contact@enricodeiana.design">contact@enricodeiana.design</a>
-                    </p>
-                </div>
-                
-                <div class="about-section version-info">
-                    <h3>Version Information</h3>
-                    <p>Version 3.0.0</p>
-                    <p>Released: March 2025</p>
-                </div>
-            </div>
+            <!-- About page content -->
         </div>
 
         <footer>
@@ -545,7 +362,6 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-    
     <!-- Main script -->
     <script src="script.js"></script>
 </body>
