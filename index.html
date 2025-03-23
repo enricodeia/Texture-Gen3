@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Texture Gen v2</title>
+    <title>Texture Gen v3</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,28 +14,22 @@
     <div class="app-container">
         <nav class="navbar">
             <div class="nav-brand">
-                <h1>Texture Gen <span class="version">v2</span></h1>
+                <h1>Texture Gen <span class="version">v3</span></h1>
                 <p>Create professional PBR texture maps instantly</p>
             </div>
             <div class="nav-tabs">
                 <button class="nav-tab active" data-page="generator">Generator</button>
+                <button class="nav-tab" data-page="uv-editor">UV Editor</button>
                 <button class="nav-tab" data-page="help">Help</button>
                 <button class="nav-tab" data-page="about">About</button>
             </div>
             <div class="nav-actions">
                 <button id="export-zip" class="action-btn export-zip-btn">
-                    <i class="fas fa-file-archive"></i> Export All Maps as ZIP
+                    <i class="fas fa-file-archive"></i> Export All Maps
                 </button>
                 <button id="export-threejs" class="action-btn export-code-btn">
-                    <i class="fas fa-code"></i> Export Three.js Code
+                    <i class="fas fa-code"></i> Export Three.js
                 </button>
-                <!-- Theme toggle button -->
-                <div class="theme-toggle">
-                    <button id="theme-switch" class="theme-switch-btn" title="Toggle Dark/Light Mode">
-                        <i class="fas fa-moon"></i>
-                        <i class="fas fa-sun" style="display: none;"></i>
-                    </button>
-                </div>
             </div>
         </nav>
 
@@ -57,40 +51,84 @@
                                 <button class="delete-btn" id="delete-image">Delete Texture</button>
                             </div>
                         </div>
-                        <!-- Material Type Selection -->
-                        <div class="material-type-selector">
-                            <label for="material-type">Material Type:</label>
-                            <select id="material-type" class="material-select">
-                                <option value="auto">Auto-Detect</option>
-                                <option value="metal">Metal</option>
-                                <option value="wood">Wood</option>
-                                <option value="stone">Stone</option>
-                                <option value="fabric">Fabric</option>
-                                <option value="plastic">Plastic</option>
-                            </select>
-                            <button id="smart-enhance" class="smart-enhance-btn">
-                                <i class="fas fa-magic"></i> Smart Enhance
-                            </button>
+                        
+                        <!-- Material Type & Seamless Controls -->
+                        <div class="material-controls">
+                            <div class="control-group">
+                                <label for="material-type">Material Type:</label>
+                                <select id="material-type" class="material-select">
+                                    <option value="auto">Auto-Detect</option>
+                                    <option value="metal">Metal</option>
+                                    <option value="wood">Wood</option>
+                                    <option value="stone">Stone</option>
+                                    <option value="fabric">Fabric</option>
+                                    <option value="plastic">Plastic</option>
+                                </select>
+                            </div>
+                            
+                            <div class="control-buttons">
+                                <button id="smart-enhance" class="control-btn smart-enhance-btn">
+                                    <i class="fas fa-magic"></i> Smart Enhance
+                                </button>
+                                <button id="make-seamless" class="control-btn seamless-btn">
+                                    <i class="fas fa-repeat"></i> Make Seamless
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Seamless Options Panel (hidden by default) -->
+                        <div class="seamless-panel" id="seamless-panel">
+                            <h4>Seamless Options</h4>
+                            <div class="seamless-controls">
+                                <div class="control-group">
+                                    <label for="seamless-strength">Blend Strength</label>
+                                    <div class="slider-container">
+                                        <input type="range" id="seamless-strength" min="0" max="1" step="0.01" value="0.5">
+                                        <span class="value" id="seamless-strength-value">0.5</span>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label for="seamless-method">Method</label>
+                                    <select id="seamless-method" class="seamless-select">
+                                        <option value="mirror">Mirror Edges</option>
+                                        <option value="blend">Edge Blend</option>
+                                        <option value="wrap">Wrap Around</option>
+                                    </select>
+                                </div>
+                                <div class="seamless-buttons">
+                                    <button id="apply-seamless" class="control-btn">Apply</button>
+                                    <button id="cancel-seamless" class="control-btn secondary">Cancel</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
                     <div class="preview-3d">
                         <div id="model-container"></div>
-                        <div class="rotation-controls">
-                            <div class="rotation-group">
-                                <label>Manual Rotation:</label>
-                                <div class="rotation-sliders">
-                                    <div class="rotation-slider">
-                                        <span>X</span>
-                                        <input type="range" id="rotation-x" min="-3.14" max="3.14" step="0.01" value="0">
+                        <div class="model-controls">
+                            <div class="model-tabs">
+                                <button class="model-tab active" data-model="sphere">Sphere</button>
+                                <button class="model-tab" data-model="cube">Cube</button>
+                                <button class="model-tab" data-model="plane">Plane</button>
+                                <button class="model-tab" data-model="cylinder">Cylinder</button>
+                            </div>
+                            
+                            <div class="rotation-controls">
+                                <div class="rotation-group">
+                                    <label>Rotation:</label>
+                                    <div class="rotation-sliders">
+                                        <div class="rotation-slider">
+                                            <span>X</span>
+                                            <input type="range" id="rotation-x" min="-3.14" max="3.14" step="0.01" value="0">
+                                        </div>
+                                        <div class="rotation-slider">
+                                            <span>Y</span>
+                                            <input type="range" id="rotation-y" min="-3.14" max="3.14" step="0.01" value="0">
+                                        </div>
+                                        <button id="toggle-auto-rotate" class="rotation-btn" title="Toggle Auto-Rotation">
+                                            <i class="fas fa-sync-alt"></i>
+                                        </button>
                                     </div>
-                                    <div class="rotation-slider">
-                                        <span>Y</span>
-                                        <input type="range" id="rotation-y" min="-3.14" max="3.14" step="0.01" value="0">
-                                    </div>
-                                    <button id="toggle-auto-rotate" class="rotation-btn" title="Toggle Auto-Rotation">
-                                        <i class="fas fa-sync-alt"></i>
-                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -98,93 +136,168 @@
                 </div>
 
                 <div class="controls-container">
-                    <h3>Texture Settings</h3>
-                    <div class="controls-grid">
-                        <div class="control-group">
-                            <label for="base-strength">Base Color Strength</label>
-                            <div class="slider-container">
-                                <input type="range" id="base-strength" min="0" max="1" step="0.01" value="1">
-                                <span class="value" id="base-value">1.0</span>
-                            </div>
+                    <div class="controls-header">
+                        <h3>Texture Settings</h3>
+                        <div class="controls-tabs">
+                            <button class="controls-tab active" data-controls="basic">Basic</button>
+                            <button class="controls-tab" data-controls="advanced">Advanced</button>
+                            <button class="controls-tab" data-controls="projection">Projection</button>
                         </div>
-                        
-                        <div class="control-group">
-                            <label for="normal-strength">Normal Strength</label>
-                            <div class="slider-container">
-                                <input type="range" id="normal-strength" min="0" max="2" step="0.01" value="1">
-                                <span class="value" id="normal-value">1.0</span>
-                            </div>
-                        </div>
-                        
-                        <div class="control-group">
-                            <label for="roughness-strength">Roughness Strength</label>
-                            <div class="slider-container">
-                                <input type="range" id="roughness-strength" min="0" max="1" step="0.01" value="0.5">
-                                <span class="value" id="roughness-value">0.5</span>
-                            </div>
-                        </div>
-                        
-                        <div class="control-group">
-                            <label for="displacement-strength">Displacement Strength</label>
-                            <div class="slider-container">
-                                <input type="range" id="displacement-strength" min="0" max="1" step="0.01" value="0.2">
-                                <span class="value" id="displacement-value">0.2</span>
-                            </div>
-                        </div>
-                        
-                        <div class="control-group">
-                            <label for="ao-strength">AO Strength</label>
-                            <div class="slider-container">
-                                <input type="range" id="ao-strength" min="0" max="1" step="0.01" value="0.5">
-                                <span class="value" id="ao-value">0.5</span>
-                            </div>
-                        </div>
-                        
-                        <div class="control-group">
-                            <label for="metalness">Metalness</label>
-                            <div class="slider-container">
-                                <input type="range" id="metalness" min="0" max="1" step="0.01" value="0">
-                                <span class="value" id="metalness-value">0.0</span>
-                            </div>
-                        </div>
-                        
-                        <!-- Emission control -->
-                        <div class="control-group">
-                            <label for="emission-strength">Emission Strength</label>
-                            <div class="slider-container">
-                                <input type="range" id="emission-strength" min="0" max="1" step="0.01" value="0">
-                                <span class="value" id="emission-value">0.0</span>
-                            </div>
-                        </div>
-                        
-                        <!-- UV Tiling control -->
-                        <div class="control-group">
-                            <label for="uv-repeat">UV Tiling</label>
-                            <div class="slider-container">
-                                <input type="range" id="uv-repeat" min="1" max="10" step="1" value="1">
-                                <span class="value" id="uv-value">1</span>
-                            </div>
-                        </div>
-                        
-                        <div class="control-group light-group">
-                            <label>Light Position</label>
-                            <div class="light-controls">
-                                <div class="light-control">
-                                    <span>X</span>
-                                    <input type="range" id="light-x" min="-10" max="10" step="0.1" value="5">
+                    </div>
+                    
+                    <!-- Basic Controls Tab (default) -->
+                    <div class="controls-panel active" id="basic-controls">
+                        <div class="controls-grid">
+                            <div class="control-group">
+                                <label for="base-strength">Base Color Strength</label>
+                                <div class="slider-container">
+                                    <input type="range" id="base-strength" min="0" max="1" step="0.01" value="1">
+                                    <span class="value" id="base-value">1.0</span>
                                 </div>
-                                <div class="light-control">
-                                    <span>Y</span>
-                                    <input type="range" id="light-y" min="-10" max="10" step="0.1" value="5">
+                            </div>
+                            
+                            <div class="control-group">
+                                <label for="normal-strength">Normal Strength</label>
+                                <div class="slider-container">
+                                    <input type="range" id="normal-strength" min="0" max="2" step="0.01" value="1">
+                                    <span class="value" id="normal-value">1.0</span>
                                 </div>
-                                <div class="light-control">
-                                    <span>Z</span>
-                                    <input type="range" id="light-z" min="-10" max="10" step="0.1" value="5">
+                            </div>
+                            
+                            <div class="control-group">
+                                <label for="roughness-strength">Roughness Strength</label>
+                                <div class="slider-container">
+                                    <input type="range" id="roughness-strength" min="0" max="1" step="0.01" value="0.5">
+                                    <span class="value" id="roughness-value">0.5</span>
                                 </div>
-                                <!-- HDRI lighting toggle -->
-                                <div class="hdri-toggle">
-                                    <input type="checkbox" id="use-hdri" class="toggle-input">
-                                    <label for="use-hdri" class="toggle-label">Use HDRI Lighting</label>
+                            </div>
+                            
+                            <div class="control-group">
+                                <label for="displacement-strength">Displacement Strength</label>
+                                <div class="slider-container">
+                                    <input type="range" id="displacement-strength" min="0" max="1" step="0.01" value="0.2">
+                                    <span class="value" id="displacement-value">0.2</span>
+                                </div>
+                            </div>
+                            
+                            <div class="control-group">
+                                <label for="ao-strength">AO Strength</label>
+                                <div class="slider-container">
+                                    <input type="range" id="ao-strength" min="0" max="1" step="0.01" value="0.5">
+                                    <span class="value" id="ao-value">0.5</span>
+                                </div>
+                            </div>
+                            
+                            <div class="control-group">
+                                <label for="metalness">Metalness</label>
+                                <div class="slider-container">
+                                    <input type="range" id="metalness" min="0" max="1" step="0.01" value="0">
+                                    <span class="value" id="metalness-value">0.0</span>
+                                </div>
+                            </div>
+                            
+                            <div class="control-group">
+                                <label for="emission-strength">Emission Strength</label>
+                                <div class="slider-container">
+                                    <input type="range" id="emission-strength" min="0" max="1" step="0.01" value="0">
+                                    <span class="value" id="emission-value">0.0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Advanced Controls Tab -->
+                    <div class="controls-panel" id="advanced-controls">
+                        <div class="controls-grid">
+                            <div class="control-group light-group">
+                                <label>Light Position</label>
+                                <div class="light-controls">
+                                    <div class="light-control">
+                                        <span>X</span>
+                                        <input type="range" id="light-x" min="-10" max="10" step="0.1" value="5">
+                                    </div>
+                                    <div class="light-control">
+                                        <span>Y</span>
+                                        <input type="range" id="light-y" min="-10" max="10" step="0.1" value="5">
+                                    </div>
+                                    <div class="light-control">
+                                        <span>Z</span>
+                                        <input type="range" id="light-z" min="-10" max="10" step="0.1" value="5">
+                                    </div>
+                                    <div class="hdri-toggle">
+                                        <input type="checkbox" id="use-hdri" class="toggle-input">
+                                        <label for="use-hdri" class="toggle-label">Use HDRI Lighting</label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="control-group">
+                                <label for="normal-algorithm">Normal Map Algorithm</label>
+                                <select id="normal-algorithm" class="control-select">
+                                    <option value="sobel">Sobel (Standard)</option>
+                                    <option value="enhanced">Enhanced Detail</option>
+                                    <option value="prewitt">Prewitt</option>
+                                </select>
+                            </div>
+                            
+                            <div class="control-group">
+                                <label for="ao-radius">AO Sampling Radius</label>
+                                <div class="slider-container">
+                                    <input type="range" id="ao-radius" min="1" max="10" step="1" value="5">
+                                    <span class="value" id="ao-radius-value">5</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Projection Controls Tab -->
+                    <div class="controls-panel" id="projection-controls">
+                        <div class="controls-grid">
+                            <div class="control-group">
+                                <label for="uv-repeat-x">Repeat X</label>
+                                <div class="slider-container">
+                                    <input type="range" id="uv-repeat-x" min="1" max="10" step="1" value="1">
+                                    <span class="value" id="uv-repeat-x-value">1</span>
+                                </div>
+                            </div>
+                            
+                            <div class="control-group">
+                                <label for="uv-repeat-y">Repeat Y</label>
+                                <div class="slider-container">
+                                    <input type="range" id="uv-repeat-y" min="1" max="10" step="1" value="1">
+                                    <span class="value" id="uv-repeat-y-value">1</span>
+                                </div>
+                            </div>
+                            
+                            <div class="control-group">
+                                <label for="uv-offset-x">Offset X</label>
+                                <div class="slider-container">
+                                    <input type="range" id="uv-offset-x" min="-1" max="1" step="0.01" value="0">
+                                    <span class="value" id="uv-offset-x-value">0.00</span>
+                                </div>
+                            </div>
+                            
+                            <div class="control-group">
+                                <label for="uv-offset-y">Offset Y</label>
+                                <div class="slider-container">
+                                    <input type="range" id="uv-offset-y" min="-1" max="1" step="0.01" value="0">
+                                    <span class="value" id="uv-offset-y-value">0.00</span>
+                                </div>
+                            </div>
+                            
+                            <div class="control-group">
+                                <label for="uv-rotation">Rotation (degrees)</label>
+                                <div class="slider-container">
+                                    <input type="range" id="uv-rotation" min="0" max="360" step="1" value="0">
+                                    <span class="value" id="uv-rotation-value">0°</span>
+                                </div>
+                            </div>
+                            
+                            <div class="control-group">
+                                <label for="uv-scale">Scale</label>
+                                <div class="slider-container">
+                                    <input type="range" id="uv-scale" min="0.1" max="5" step="0.1" value="1">
+                                    <span class="value" id="uv-scale-value">1.0</span>
                                 </div>
                             </div>
                         </div>
@@ -214,14 +327,12 @@
                             <input type="checkbox" id="export-ao" checked>
                             <label for="export-ao">Ambient Occlusion</label>
                         </div>
-                        <!-- Emission export option -->
                         <div class="export-checkbox">
                             <input type="checkbox" id="export-emission">
                             <label for="export-emission">Emission</label>
                         </div>
                     </div>
                     
-                    <!-- Format options -->
                     <div class="format-options">
                         <label>Export Format:</label>
                         <div class="format-toggle">
@@ -308,7 +419,6 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- Emission Map preview -->
                         <div class="map-preview">
                             <div class="map-header">
                                 <h4>Emission Map</h4>
@@ -328,14 +438,236 @@
             </main>
         </div>
 
+        <!-- UV Editor Page -->
+        <div class="page-content hidden" id="uv-editor-page">
+            <div class="uv-editor-container">
+                <div class="uv-editor-main">
+                    <div class="uv-canvas-container">
+                        <canvas id="uv-canvas"></canvas>
+                        <div class="uv-overlay">
+                            <div class="uv-controls">
+                                <button id="uv-pan" class="uv-tool active" title="Pan View"><i class="fas fa-hand-paper"></i></button>
+                                <button id="uv-select" class="uv-tool" title="Select Islands"><i class="fas fa-object-group"></i></button>
+                                <button id="uv-move" class="uv-tool" title="Move Selection"><i class="fas fa-arrows-alt"></i></button>
+                                <button id="uv-rotate" class="uv-tool" title="Rotate Selection"><i class="fas fa-sync"></i></button>
+                                <button id="uv-scale" class="uv-tool" title="Scale Selection"><i class="fas fa-expand-arrows-alt"></i></button>
+                            </div>
+                            <div class="uv-zoom-controls">
+                                <button id="uv-zoom-in" title="Zoom In"><i class="fas fa-search-plus"></i></button>
+                                <button id="uv-zoom-out" title="Zoom Out"><i class="fas fa-search-minus"></i></button>
+                                <button id="uv-reset" title="Reset View"><i class="fas fa-home"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="uv-preview">
+                        <h4>3D Preview</h4>
+                        <div id="uv-model-container"></div>
+                    </div>
+                </div>
+                <div class="uv-editor-sidebar">
+                    <div class="uv-editor-section">
+                        <h4>UV Transformation</h4>
+                        <div class="uv-editor-controls">
+                            <div class="control-group">
+                                <label for="uv-edit-pos-x">Position X</label>
+                                <div class="number-input">
+                                    <input type="number" id="uv-edit-pos-x" step="0.01" value="0">
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label for="uv-edit-pos-y">Position Y</label>
+                                <div class="number-input">
+                                    <input type="number" id="uv-edit-pos-y" step="0.01" value="0">
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label for="uv-edit-rotation">Rotation</label>
+                                <div class="number-input">
+                                    <input type="number" id="uv-edit-rotation" step="1" value="0">
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label for="uv-edit-scale-x">Scale X</label>
+                                <div class="number-input">
+                                    <input type="number" id="uv-edit-scale-x" step="0.01" min="0.01" value="1">
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label for="uv-edit-scale-y">Scale Y</label>
+                                <div class="number-input">
+                                    <input type="number" id="uv-edit-scale-y" step="0.01" min="0.01" value="1">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="uv-editor-section">
+                        <h4>UV Operations</h4>
+                        <div class="uv-operations">
+                            <button id="uv-unwrap" class="uv-op-btn">Unwrap</button>
+                            <button id="uv-reset-all" class="uv-op-btn">Reset All</button>
+                            <button id="uv-pack" class="uv-op-btn">Pack Islands</button>
+                            <button id="uv-mirror-h" class="uv-op-btn">Mirror Horizontal</button>
+                            <button id="uv-mirror-v" class="uv-op-btn">Mirror Vertical</button>
+                        </div>
+                    </div>
+                    
+                    <div class="uv-editor-section">
+                        <h4>Display Options</h4>
+                        <div class="uv-display-options">
+                            <div class="option-checkbox">
+                                <input type="checkbox" id="uv-show-grid" checked>
+                                <label for="uv-show-grid">Show Grid</label>
+                            </div>
+                            <div class="option-checkbox">
+                                <input type="checkbox" id="uv-show-checkerboard" checked>
+                                <label for="uv-show-checkerboard">Show Checkerboard</label>
+                            </div>
+                            <div class="option-checkbox">
+                                <input type="checkbox" id="uv-show-texture" checked>
+                                <label for="uv-show-texture">Show Texture</label>
+                            </div>
+                            <div class="option-checkbox">
+                                <input type="checkbox" id="uv-show-seams">
+                                <label for="uv-show-seams">Highlight Seams</label>
+                            </div>
+                            <div class="control-group">
+                                <label for="uv-overlay-opacity">Texture Opacity</label>
+                                <div class="slider-container">
+                                    <input type="range" id="uv-overlay-opacity" min="0" max="1" step="0.1" value="0.7">
+                                    <span class="value" id="uv-overlay-opacity-value">0.7</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="uv-editor-actions">
+                        <button id="uv-apply" class="action-btn">Apply Changes</button>
+                        <button id="uv-cancel" class="action-btn secondary">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Help Page -->
         <div class="page-content hidden" id="help-page">
-            <!-- Help page content -->
+            <div class="help-container">
+                <h2>Help & Documentation</h2>
+                
+                <div class="help-section">
+                    <h3>Getting Started</h3>
+                    <p>Texture Gen v3 is a powerful tool for creating PBR texture maps from a single base image. This guide will help you make the most of its features.</p>
+                    
+                    <h4>Basic Workflow:</h4>
+                    <ol>
+                        <li>Upload a texture image using drag & drop or the browse button</li>
+                        <li>Adjust texture settings to your liking</li>
+                        <li>Preview the results on different 3D models</li>
+                        <li>Export individual maps or all maps as a ZIP file</li>
+                    </ol>
+                </div>
+                
+                <div class="help-section">
+                    <h3>New Features in v3</h3>
+                    <ul>
+                        <li>
+                            <strong>Seamless Textures:</strong> Create tileable textures with the new "Make Seamless" feature. Use different
+                            algorithms to get the best results for your specific texture.
+                        </li>
+                        <li>
+                            <strong>Enhanced UV Controls:</strong> More precise control over texture projection with separate X/Y repeat, offset, rotation, and scale.
+                        </li>
+                        <li>
+                            <strong>UV Editor:</strong> Edit UV mapping directly with the new UV Editor tab. Reposition, scale, and rotate UV islands.
+                        </li>
+                        <li>
+                            <strong>Multiple 3D Preview Models:</strong> View your textures on various 3D shapes including sphere, cube, cylinder, and plane.
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="help-section">
+                    <h3>Keyboard Shortcuts</h3>
+                    <div class="shortcuts-grid">
+                        <div class="shortcut">
+                            <kbd>Space</kbd>
+                            <span>Toggle auto-rotation</span>
+                        </div>
+                        <div class="shortcut">
+                            <kbd>E</kbd>
+                            <span>Export all maps as ZIP</span>
+                        </div>
+                        <div class="shortcut">
+                            <kbd>C</kbd>
+                            <span>Export Three.js code</span>
+                        </div>
+                        <div class="shortcut">
+                            <kbd>S</kbd>
+                            <span>Smart enhance</span>
+                        </div>
+                        <div class="shortcut">
+                            <kbd>Arrow Keys</kbd>
+                            <span>Rotate model</span>
+                        </div>
+                        <div class="shortcut">
+                            <kbd>H</kbd>
+                            <span>Toggle HDRI lighting</span>
+                        </div>
+                        <div class="shortcut">
+                            <kbd>M</kbd>
+                            <span>Make seamless</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- About Page -->
         <div class="page-content hidden" id="about-page">
-            <!-- About page content -->
+            <div class="about-container">
+                <h2>About Texture Gen v3</h2>
+                
+                <div class="about-section">
+                    <h3>What is Texture Gen?</h3>
+                    <p>
+                        Texture Gen is a professional PBR texture generation tool that allows you to create a 
+                        complete set of texture maps from a single input image. Perfect for game developers, 
+                        3D artists, and designers who need high-quality materials quickly.
+                    </p>
+                </div>
+                
+                <div class="about-section">
+                    <h3>Features</h3>
+                    <ul>
+                        <li>Generate Base Color, Normal, Roughness, Displacement, AO, and Emission maps</li>
+                        <li>Live 3D preview with multiple model options</li>
+                        <li>Seamless texture creation</li>
+                        <li>Advanced UV projection controls</li>
+                        <li>Integrated UV editor</li>
+                        <li>Smart material enhancement</li>
+                        <li>Export individual maps or complete texture sets</li>
+                        <li>Generate Three.js code for your materials</li>
+                    </ul>
+                </div>
+                
+                <div class="about-section">
+                    <h3>Credits</h3>
+                    <p>
+                        Designed and developed by <a href="https://enricodeiana.design/" target="_blank">Enrico Deiana</a>.<br>
+                        Built with Three.js, JSZip, and FileSaver.js.
+                    </p>
+                    <p>
+                        Have suggestions or found a bug? Please reach out at 
+                        <a href="mailto:contact@enricodeiana.design">contact@enricodeiana.design</a>
+                    </p>
+                </div>
+                
+                <div class="about-section version-info">
+                    <h3>Version Information</h3>
+                    <p>Version 3.0.0</p>
+                    <p>Released: March 2025</p>
+                </div>
+            </div>
         </div>
 
         <footer>
@@ -362,6 +694,7 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    
     <!-- Main script -->
     <script src="script.js"></script>
 </body>
