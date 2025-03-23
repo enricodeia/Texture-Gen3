@@ -427,16 +427,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (useHDRI) {
             toggleHDRILighting(true);
         }
-        
-        console.log("Sphere created with textures:", {
-            base: !!material.map,
-            normal: !!material.normalMap,
-            roughness: !!material.roughnessMap,
-            displacement: !!material.displacementMap,
-            ao: !!material.aoMap,
-            emission: !!material.emissiveMap,
-            alpha: !!material.alphaMap
-        });
     }
     
     // Animation loop
@@ -641,7 +631,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 break;
                 
             case 'Escape': // Close modals
-                // You can handle closing modals here if needed
+                // Could handle closing modals here if needed
                 break;
                 
             case 'ArrowLeft': // Rotate Y axis left
