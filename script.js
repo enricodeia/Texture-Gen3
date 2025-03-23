@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Global variables
     let scene, camera, renderer, sphere, light, grid;
-    let baseTexture, normalTexture, roughnessTexture, displacementTexture, aoTexture, emissionTexture, alphaTexture;
+    let baseTexture, normalTexture, roughnessTexture, displacementTexture, aoTexture, emissionTexture;
     let originalImageData;
     let hasUploadedImage = false;
     let autoRotate = true;
@@ -38,7 +38,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const displacementCanvas = document.getElementById('displacement-map');
     const aoCanvas = document.getElementById('ao-map');
     const emissionCanvas = document.getElementById('emission-map');
-    const alphaCanvas = document.getElementById('alpha-map');
     
     // Control Elements
     const baseStrength = document.getElementById('base-strength');
@@ -72,7 +71,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const downloadDisplacement = document.getElementById('download-displacement');
     const downloadAO = document.getElementById('download-ao');
     const downloadEmission = document.getElementById('download-emission');
-    const downloadAlpha = document.getElementById('download-alpha');
     const exportZip = document.getElementById('export-zip');
     const exportThreejs = document.getElementById('export-threejs');
     const smartEnhanceBtn = document.getElementById('smart-enhance');
@@ -84,7 +82,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const exportDisplacement = document.getElementById('export-displacement');
     const exportAO = document.getElementById('export-ao');
     const exportEmission = document.getElementById('export-emission');
-    const exportAlpha = document.getElementById('export-alpha');
     const formatRadios = document.querySelectorAll('input[name="format"]');
     
     // Processing indicator
@@ -359,11 +356,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (displacementTexture) displacementTexture.needsUpdate = true;
         if (aoTexture) aoTexture.needsUpdate = true;
         if (emissionTexture) emissionTexture.needsUpdate = true;
-        if (alphaTexture) {
-            alphaTexture.needsUpdate = true;
-            material.transparent = true;
-            material.alphaTest = 0.5;
-        }
     
         // Apply textures
         material.map = baseTexture;
@@ -372,7 +364,6 @@ document.addEventListener('DOMContentLoaded', function() {
         material.displacementMap = displacementTexture;
         material.aoMap = aoTexture;
         material.emissiveMap = emissionTexture;
-        material.alphaMap = alphaTexture;
         
         // If emission map is applied, set emissive color and intensity
         if (emissionTexture) {
@@ -401,7 +392,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Apply to all other maps
             const maps = [
                 'normalMap', 'roughnessMap', 'displacementMap', 
-                'aoMap', 'emissiveMap', 'alphaMap'
+                'aoMap', 'emissiveMap'
             ];
             
             maps.forEach(mapName => {
@@ -542,7 +533,6 @@ document.addEventListener('DOMContentLoaded', function() {
         downloadDisplacement.addEventListener('click', () => downloadTexture(displacementCanvas, 'displacement-map'));
         downloadAO.addEventListener('click', () => downloadTexture(aoCanvas, 'ao-map'));
         downloadEmission.addEventListener('click', () => downloadTexture(emissionCanvas, 'emission-map'));
-        downloadAlpha.addEventListener('click', () => downloadTexture(alphaCanvas, 'alpha-map'));
         
         // Export ZIP
         exportZip.addEventListener('click', exportAllMapsAsZip);
@@ -693,7 +683,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Apply to all maps
             const maps = [
                 'map', 'normalMap', 'roughnessMap', 'displacementMap', 
-                'aoMap', 'emissiveMap', 'alphaMap'
+                'aoMap', 'emissiveMap'
             ];
             
             maps.forEach(mapName => {
@@ -877,8 +867,6 @@ document.addEventListener('DOMContentLoaded', function() {
             sphere.material.displacementMap = null;
             sphere.material.aoMap = null;
             sphere.material.emissiveMap = null;
-            sphere.material.alphaMap = null;
-            sphere.material.transparent = false;
             sphere.material.needsUpdate = true;
         }
         
@@ -889,7 +877,6 @@ document.addEventListener('DOMContentLoaded', function() {
         clearCanvas(displacementCanvas);
         clearCanvas(aoCanvas);
         clearCanvas(emissionCanvas);
-        clearCanvas(alphaCanvas);
         
         // Reset textures
         baseTexture = null;
@@ -898,7 +885,6 @@ document.addEventListener('DOMContentLoaded', function() {
         displacementTexture = null;
         aoTexture = null;
         emissionTexture = null;
-        alphaTexture = null;
         originalImageData = null;
         
         showNotification('Image removed', 'info');
@@ -1112,9 +1098,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Generate emission map (new)
         generateEmissionMap(originalImageData);
-        
-        // Generate alpha/transparency map (new)
-        generateAlphaMap(originalImageData);
     }
     
     // Generate base color map (formerly diffuse)
@@ -1448,44 +1431,6 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log("Emission map generated");
     }
     
-    // Generate alpha/transparency map
-    function generateAlphaMap(imageData) {
-        // Set canvas dimensions
-        alphaCanvas.width = imageData.width;
-        alphaCanvas.height = imageData.height;
-        
-        const ctx = alphaCanvas.getContext('2d');
-        const outputData = ctx.createImageData(imageData.width, imageData.height);
-        
-        // Simple alpha map - for demonstration, use inverse of brightness
-        // In a real world scenario, this might be connected to a specific color channel or user input
-        for (let i = 0; i < imageData.data.length; i += 4) {
-            const r = imageData.data[i];
-            const g = imageData.data[i + 1];
-            const b = imageData.data[i + 2];
-            
-            // By default, everything is opaque (alpha = 255)
-            // For demonstration, darker areas are more transparent
-            const brightness = (r + g + b) / 3;
-            
-            // Generate basic alpha map (black = transparent, white = opaque)
-            // Invert this behavior if you want dark areas to be opaque
-            outputData.data[i] = brightness;
-            outputData.data[i + 1] = brightness;
-            outputData.data[i + 2] = brightness;
-            outputData.data[i + 3] = 255; // Alpha for this image itself
-        }
-        
-        // Put the processed data back to canvas
-        ctx.putImageData(outputData, 0, 0);
-        
-        // Create alpha texture
-        alphaTexture = new THREE.Texture(alphaCanvas);
-        alphaTexture.needsUpdate = true;
-        
-        console.log("Alpha map generated");
-    }
-    
     // Update textures based on slider values
     function updateTextures() {
         // Update display values
@@ -1629,12 +1574,6 @@ document.addEventListener('DOMContentLoaded', function() {
             zip.file(`${textureBaseName}_emission.${format}`, dataURLToBlob(emissionCanvas.toDataURL(mimeType)), {base64: false});
             exportCount++;
             updateProgress(85);
-        }
-        
-        if (exportAlpha && exportAlpha.checked && alphaCanvas) {
-            zip.file(`${textureBaseName}_alpha.${format}`, dataURLToBlob(alphaCanvas.toDataURL(mimeType)), {base64: false});
-            exportCount++;
-            updateProgress(90);
         }
         
         if (exportCount === 0) {
