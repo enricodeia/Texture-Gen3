@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Texture Gen v3</title>
+    <title>Texture Gen v2</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,21 +14,20 @@
     <div class="app-container">
         <nav class="navbar">
             <div class="nav-brand">
-                <h1>Texture Gen <span class="version">v3</span></h1>
+                <h1>Texture Gen <span class="version">v2</span></h1>
                 <p>Create professional PBR texture maps instantly</p>
             </div>
             <div class="nav-tabs">
                 <button class="nav-tab active" data-page="generator">Generator</button>
-                <button class="nav-tab" data-page="uv-editor">UV Editor</button>
                 <button class="nav-tab" data-page="help">Help</button>
                 <button class="nav-tab" data-page="about">About</button>
             </div>
             <div class="nav-actions">
                 <button id="export-zip" class="action-btn export-zip-btn">
-                    <i class="fas fa-file-archive"></i> Export All Maps
+                    <i class="fas fa-file-archive"></i> Export All Maps as ZIP
                 </button>
                 <button id="export-threejs" class="action-btn export-code-btn">
-                    <i class="fas fa-code"></i> Export Three.js
+                    <i class="fas fa-code"></i> Export Three.js Code
                 </button>
             </div>
         </nav>
@@ -51,249 +50,127 @@
                                 <button class="delete-btn" id="delete-image">Delete Texture</button>
                             </div>
                         </div>
-                        
-                        <!-- Seamless Controls -->
-                        <div class="material-controls">
-                            <div class="control-group">
-                                <label for="material-type">Material Type:</label>
-                                <select id="material-type" class="material-select">
-                                    <option value="auto">Auto-Detect</option>
-                                    <option value="metal">Metal</option>
-                                    <option value="wood">Wood</option>
-                                    <option value="stone">Stone</option>
-                                    <option value="fabric">Fabric</option>
-                                    <option value="plastic">Plastic</option>
-                                </select>
-                            </div>
-                            
-                            <div class="control-buttons">
-                                <button id="toggle-seamless" class="control-btn seamless-btn full-width">
-                                    <i class="fas fa-repeat"></i> Toggle Seamless Mode
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <!-- Seamless Controls Panel -->
-                        <div class="seamless-panel" id="seamless-panel">
-                            <h4>Seamless Tiling</h4>
-                            <div class="seamless-controls">
-                                <div class="control-group">
-                                    <label for="seamless-strength">Blend Strength</label>
-                                    <div class="slider-container">
-                                        <input type="range" id="seamless-strength" min="0" max="1" step="0.01" value="0.5">
-                                        <span class="value" id="seamless-strength-value">0.5</span>
-                                    </div>
-                                </div>
-                                <div class="control-group">
-                                    <label for="seamless-method">Method</label>
-                                    <select id="seamless-method" class="seamless-select">
-                                        <option value="mirror">Mirror Edges</option>
-                                        <option value="blend">Edge Blend</option>
-                                        <option value="wrap">Wrap Around</option>
-                                    </select>
-                                </div>
-                                <div class="control-group">
-                                    <label for="seamless-tiles">Preview Tiles</label>
-                                    <div class="slider-container">
-                                        <input type="range" id="seamless-tiles" min="1" max="4" step="1" value="2">
-                                        <span class="value" id="seamless-tiles-value">2×2</span>
-                                    </div>
-                                </div>
-                                <div id="seamless-preview-container" class="seamless-preview-container">
-                                    <canvas id="seamless-preview"></canvas>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                     
                     <div class="preview-3d">
                         <div id="model-container"></div>
-                        <div class="model-controls">
-                            <div class="rotation-controls">
-                                <div class="rotation-group">
-                                    <label>Rotation:</label>
-                                    <div class="rotation-sliders">
-                                        <div class="rotation-slider">
-                                            <span>X</span>
-                                            <input type="range" id="rotation-x" min="-3.14" max="3.14" step="0.01" value="0">
-                                        </div>
-                                        <div class="rotation-slider">
-                                            <span>Y</span>
-                                            <input type="range" id="rotation-y" min="-3.14" max="3.14" step="0.01" value="0">
-                                        </div>
-                                        <button id="toggle-auto-rotate" class="rotation-btn" title="Toggle Auto-Rotation">
-                                            <i class="fas fa-sync-alt"></i>
-                                        </button>
+                        <div class="rotation-controls">
+                            <div class="rotation-group">
+                                <label>Manual Rotation:</label>
+                                <div class="rotation-sliders">
+                                    <div class="rotation-slider">
+                                        <span>X</span>
+                                        <input type="range" id="rotation-x" min="-3.14" max="3.14" step="0.01" value="0">
                                     </div>
+                                    <div class="rotation-slider">
+                                        <span>Y</span>
+                                        <input type="range" id="rotation-y" min="-3.14" max="3.14" step="0.01" value="0">
+                                    </div>
+                                    <button id="toggle-auto-rotate" class="rotation-btn" title="Toggle Auto-Rotation">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
+                <!-- New Material Presets Section -->
+                <div class="presets-container">
+                    <h3>Material Presets</h3>
+                    <div class="presets-grid">
+                        <button class="preset-btn" data-preset="default">
+                            <i class="fas fa-palette"></i>
+                            <span>Default</span>
+                        </button>
+                        <button class="preset-btn" data-preset="metal">
+                            <i class="fas fa-cog"></i>
+                            <span>Metal</span>
+                        </button>
+                        <button class="preset-btn" data-preset="wood">
+                            <i class="fas fa-tree"></i>
+                            <span>Wood</span>
+                        </button>
+                        <button class="preset-btn" data-preset="stone">
+                            <i class="fas fa-mountain"></i>
+                            <span>Stone</span>
+                        </button>
+                        <button class="preset-btn" data-preset="fabric">
+                            <i class="fas fa-tshirt"></i>
+                            <span>Fabric</span>
+                        </button>
+                        <button class="preset-btn" data-preset="plastic">
+                            <i class="fas fa-dice-d6"></i>
+                            <span>Plastic</span>
+                        </button>
+                    </div>
+                </div>
+
                 <div class="controls-container">
-                    <div class="controls-header">
-                        <h3>Texture Settings</h3>
-                        <div class="controls-tabs">
-                            <button class="controls-tab active" data-controls="basic">Basic</button>
-                            <button class="controls-tab" data-controls="advanced">Advanced</button>
-                            <button class="controls-tab" data-controls="projection">Projection</button>
-                        </div>
-                    </div>
-                    
-                    <!-- Basic Controls Tab (default) -->
-                    <div class="controls-panel active" id="basic-controls">
-                        <div class="controls-grid">
-                            <div class="control-group">
-                                <label for="base-strength">Base Color Strength</label>
-                                <div class="slider-container">
-                                    <input type="range" id="base-strength" min="0" max="1" step="0.01" value="1">
-                                    <span class="value" id="base-value">1.0</span>
-                                </div>
-                            </div>
-                            
-                            <div class="control-group">
-                                <label for="normal-strength">Normal Strength</label>
-                                <div class="slider-container">
-                                    <input type="range" id="normal-strength" min="0" max="2" step="0.01" value="1">
-                                    <span class="value" id="normal-value">1.0</span>
-                                </div>
-                            </div>
-                            
-                            <div class="control-group">
-                                <label for="roughness-strength">Roughness Strength</label>
-                                <div class="slider-container">
-                                    <input type="range" id="roughness-strength" min="0" max="1" step="0.01" value="0.5">
-                                    <span class="value" id="roughness-value">0.5</span>
-                                </div>
-                            </div>
-                            
-                            <div class="control-group">
-                                <label for="displacement-strength">Displacement Strength</label>
-                                <div class="slider-container">
-                                    <input type="range" id="displacement-strength" min="0" max="1" step="0.01" value="0.2">
-                                    <span class="value" id="displacement-value">0.2</span>
-                                </div>
-                            </div>
-                            
-                            <div class="control-group">
-                                <label for="ao-strength">AO Strength</label>
-                                <div class="slider-container">
-                                    <input type="range" id="ao-strength" min="0" max="1" step="0.01" value="0.5">
-                                    <span class="value" id="ao-value">0.5</span>
-                                </div>
-                            </div>
-                            
-                            <div class="control-group">
-                                <label for="metalness">Metalness</label>
-                                <div class="slider-container">
-                                    <input type="range" id="metalness" min="0" max="1" step="0.01" value="0">
-                                    <span class="value" id="metalness-value">0.0</span>
-                                </div>
-                            </div>
-                            
-                            <div class="control-group">
-                                <label for="emission-strength">Emission Strength</label>
-                                <div class="slider-container">
-                                    <input type="range" id="emission-strength" min="0" max="1" step="0.01" value="0">
-                                    <span class="value" id="emission-value">0.0</span>
-                                </div>
+                    <h3>Texture Settings</h3>
+                    <div class="controls-grid">
+                        <div class="control-group">
+                            <label for="base-strength">Base Color Strength</label>
+                            <div class="slider-container">
+                                <input type="range" id="base-strength" min="0" max="1" step="0.01" value="1">
+                                <span class="value" id="base-value">1.0</span>
                             </div>
                         </div>
-                    </div>
-                    
-                    <!-- Advanced Controls Tab -->
-                    <div class="controls-panel" id="advanced-controls">
-                        <div class="controls-grid">
-                            <div class="control-group light-group">
-                                <label>Light Position</label>
-                                <div class="light-controls">
-                                    <div class="light-control">
-                                        <span>X</span>
-                                        <input type="range" id="light-x" min="-10" max="10" step="0.1" value="5">
-                                    </div>
-                                    <div class="light-control">
-                                        <span>Y</span>
-                                        <input type="range" id="light-y" min="-10" max="10" step="0.1" value="5">
-                                    </div>
-                                    <div class="light-control">
-                                        <span>Z</span>
-                                        <input type="range" id="light-z" min="-10" max="10" step="0.1" value="5">
-                                    </div>
-                                    <div class="hdri-toggle">
-                                        <input type="checkbox" id="use-hdri" class="toggle-input">
-                                        <label for="use-hdri" class="toggle-label">Use HDRI Lighting</label>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="control-group">
-                                <label for="normal-algorithm">Normal Map Algorithm</label>
-                                <select id="normal-algorithm" class="control-select">
-                                    <option value="sobel">Sobel (Standard)</option>
-                                    <option value="enhanced">Enhanced Detail</option>
-                                    <option value="prewitt">Prewitt</option>
-                                </select>
-                            </div>
-                            
-                            <div class="control-group">
-                                <label for="ao-radius">AO Sampling Radius</label>
-                                <div class="slider-container">
-                                    <input type="range" id="ao-radius" min="1" max="10" step="1" value="5">
-                                    <span class="value" id="ao-radius-value">5</span>
-                                </div>
+                        
+                        <div class="control-group">
+                            <label for="normal-strength">Normal Strength</label>
+                            <div class="slider-container">
+                                <input type="range" id="normal-strength" min="0" max="2" step="0.01" value="1">
+                                <span class="value" id="normal-value">1.0</span>
                             </div>
                         </div>
-                    </div>
-                    
-                    <!-- Projection Controls Tab -->
-                    <div class="controls-panel" id="projection-controls">
-                        <div class="controls-grid">
-                            <div class="control-group">
-                                <label for="uv-repeat-x">Repeat X</label>
-                                <div class="slider-container">
-                                    <input type="range" id="uv-repeat-x" min="1" max="10" step="1" value="1">
-                                    <span class="value" id="uv-repeat-x-value">1</span>
-                                </div>
+                        
+                        <div class="control-group">
+                            <label for="roughness-strength">Roughness Strength</label>
+                            <div class="slider-container">
+                                <input type="range" id="roughness-strength" min="0" max="1" step="0.01" value="0.5">
+                                <span class="value" id="roughness-value">0.5</span>
                             </div>
-                            
-                            <div class="control-group">
-                                <label for="uv-repeat-y">Repeat Y</label>
-                                <div class="slider-container">
-                                    <input type="range" id="uv-repeat-y" min="1" max="10" step="1" value="1">
-                                    <span class="value" id="uv-repeat-y-value">1</span>
-                                </div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label for="displacement-strength">Displacement Strength</label>
+                            <div class="slider-container">
+                                <input type="range" id="displacement-strength" min="0" max="1" step="0.01" value="0.2">
+                                <span class="value" id="displacement-value">0.2</span>
                             </div>
-                            
-                            <div class="control-group">
-                                <label for="uv-offset-x">Offset X</label>
-                                <div class="slider-container">
-                                    <input type="range" id="uv-offset-x" min="-1" max="1" step="0.01" value="0">
-                                    <span class="value" id="uv-offset-x-value">0.00</span>
-                                </div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label for="ao-strength">AO Strength</label>
+                            <div class="slider-container">
+                                <input type="range" id="ao-strength" min="0" max="1" step="0.01" value="0.5">
+                                <span class="value" id="ao-value">0.5</span>
                             </div>
-                            
-                            <div class="control-group">
-                                <label for="uv-offset-y">Offset Y</label>
-                                <div class="slider-container">
-                                    <input type="range" id="uv-offset-y" min="-1" max="1" step="0.01" value="0">
-                                    <span class="value" id="uv-offset-y-value">0.00</span>
-                                </div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label for="metalness">Metalness</label>
+                            <div class="slider-container">
+                                <input type="range" id="metalness" min="0" max="1" step="0.01" value="0">
+                                <span class="value" id="metalness-value">0.0</span>
                             </div>
-                            
-                            <div class="control-group">
-                                <label for="uv-rotation">Rotation (degrees)</label>
-                                <div class="slider-container">
-                                    <input type="range" id="uv-rotation" min="0" max="360" step="1" value="0">
-                                    <span class="value" id="uv-rotation-value">0°</span>
+                        </div>
+                        
+                        <div class="control-group light-group">
+                            <label>Light Position</label>
+                            <div class="light-controls">
+                                <div class="light-control">
+                                    <span>X</span>
+                                    <input type="range" id="light-x" min="-10" max="10" step="0.1" value="5">
                                 </div>
-                            </div>
-                            
-                            <div class="control-group">
-                                <label for="uv-scale">Scale</label>
-                                <div class="slider-container">
-                                    <input type="range" id="uv-scale" min="0.1" max="5" step="0.1" value="1">
-                                    <span class="value" id="uv-scale-value">1.0</span>
+                                <div class="light-control">
+                                    <span>Y</span>
+                                    <input type="range" id="light-y" min="-10" max="10" step="0.1" value="5">
+                                </div>
+                                <div class="light-control">
+                                    <span>Z</span>
+                                    <input type="range" id="light-z" min="-10" max="10" step="0.1" value="5">
                                 </div>
                             </div>
                         </div>
@@ -303,41 +180,45 @@
                 <div class="export-options">
                     <h3>Export Options</h3>
                     <div class="export-container">
-                        <div class="export-checkbox">
-                            <input type="checkbox" id="export-base" checked>
-                            <label for="export-base">Base Color</label>
+                        <div class="export-group">
+                            <div class="export-checkbox">
+                                <input type="checkbox" id="export-base" checked>
+                                <label for="export-base">Base Color</label>
+                            </div>
+                            <div class="export-checkbox">
+                                <input type="checkbox" id="export-normal" checked>
+                                <label for="export-normal">Normal</label>
+                            </div>
+                            <div class="export-checkbox">
+                                <input type="checkbox" id="export-roughness" checked>
+                                <label for="export-roughness">Roughness</label>
+                            </div>
+                            <div class="export-checkbox">
+                                <input type="checkbox" id="export-displacement" checked>
+                                <label for="export-displacement">Displacement</label>
+                            </div>
+                            <div class="export-checkbox">
+                                <input type="checkbox" id="export-ao" checked>
+                                <label for="export-ao">Ambient Occlusion</label>
+                            </div>
                         </div>
-                        <div class="export-checkbox">
-                            <input type="checkbox" id="export-normal" checked>
-                            <label for="export-normal">Normal</label>
-                        </div>
-                        <div class="export-checkbox">
-                            <input type="checkbox" id="export-roughness" checked>
-                            <label for="export-roughness">Roughness</label>
-                        </div>
-                        <div class="export-checkbox">
-                            <input type="checkbox" id="export-displacement" checked>
-                            <label for="export-displacement">Displacement</label>
-                        </div>
-                        <div class="export-checkbox">
-                            <input type="checkbox" id="export-ao" checked>
-                            <label for="export-ao">Ambient Occlusion</label>
-                        </div>
-                        <div class="export-checkbox">
-                            <input type="checkbox" id="export-emission">
-                            <label for="export-emission">Emission</label>
-                        </div>
-                    </div>
-                    
-                    <div class="format-options">
-                        <label>Export Format:</label>
-                        <div class="format-toggle">
-                            <input type="radio" id="format-png" name="format" value="png" checked>
-                            <label for="format-png">PNG</label>
-                            <input type="radio" id="format-webp" name="format" value="webp">
-                            <label for="format-webp">WebP</label>
-                            <input type="radio" id="format-jpg" name="format" value="jpg">
-                            <label for="format-jpg">JPG</label>
+                        
+                        <!-- Export Format Selection -->
+                        <div class="format-selection">
+                            <label for="export-format">Export Format:</label>
+                            <select id="export-format" class="format-dropdown">
+                                <option value="png">PNG (Best Quality)</option>
+                                <option value="webp">WebP (Efficient)</option>
+                                <option value="jpeg">JPEG (Smallest Size)</option>
+                            </select>
+                            <div class="format-info">
+                                <i class="fas fa-info-circle"></i>
+                                <div class="format-tooltip">
+                                    <p><strong>PNG:</strong> Lossless, best for normal & displacement maps</p>
+                                    <p><strong>WebP:</strong> Balanced quality & size, modern browsers</p>
+                                    <p><strong>JPEG:</strong> Smallest files, suitable for base color</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -348,9 +229,16 @@
                         <div class="map-preview">
                             <div class="map-header">
                                 <h4>Base Color Map</h4>
-                                <button class="download-btn" id="download-base" title="Download Base Color Map">
-                                    <i class="fas fa-download"></i>
-                                </button>
+                                <div class="map-actions">
+                                    <select class="map-format-select" id="base-format">
+                                        <option value="png">PNG</option>
+                                        <option value="webp">WebP</option>
+                                        <option value="jpeg">JPEG</option>
+                                    </select>
+                                    <button class="download-btn" id="download-base" title="Download Base Color Map">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                </div>
                             </div>
                             <div class="canvas-wrapper">
                                 <canvas id="base-map"></canvas>
@@ -362,9 +250,16 @@
                         <div class="map-preview">
                             <div class="map-header">
                                 <h4>Normal Map</h4>
-                                <button class="download-btn" id="download-normal" title="Download Normal Map">
-                                    <i class="fas fa-download"></i>
-                                </button>
+                                <div class="map-actions">
+                                    <select class="map-format-select" id="normal-format">
+                                        <option value="png">PNG</option>
+                                        <option value="webp">WebP</option>
+                                        <option value="jpeg">JPEG</option>
+                                    </select>
+                                    <button class="download-btn" id="download-normal" title="Download Normal Map">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                </div>
                             </div>
                             <div class="canvas-wrapper">
                                 <canvas id="normal-map"></canvas>
@@ -376,9 +271,16 @@
                         <div class="map-preview">
                             <div class="map-header">
                                 <h4>Roughness Map</h4>
-                                <button class="download-btn" id="download-roughness" title="Download Roughness Map">
-                                    <i class="fas fa-download"></i>
-                                </button>
+                                <div class="map-actions">
+                                    <select class="map-format-select" id="roughness-format">
+                                        <option value="png">PNG</option>
+                                        <option value="webp">WebP</option>
+                                        <option value="jpeg">JPEG</option>
+                                    </select>
+                                    <button class="download-btn" id="download-roughness" title="Download Roughness Map">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                </div>
                             </div>
                             <div class="canvas-wrapper">
                                 <canvas id="roughness-map"></canvas>
@@ -390,9 +292,16 @@
                         <div class="map-preview">
                             <div class="map-header">
                                 <h4>Displacement Map</h4>
-                                <button class="download-btn" id="download-displacement" title="Download Displacement Map">
-                                    <i class="fas fa-download"></i>
-                                </button>
+                                <div class="map-actions">
+                                    <select class="map-format-select" id="displacement-format">
+                                        <option value="png">PNG</option>
+                                        <option value="webp">WebP</option>
+                                        <option value="jpeg">JPEG</option>
+                                    </select>
+                                    <button class="download-btn" id="download-displacement" title="Download Displacement Map">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                </div>
                             </div>
                             <div class="canvas-wrapper">
                                 <canvas id="displacement-map"></canvas>
@@ -404,9 +313,16 @@
                         <div class="map-preview">
                             <div class="map-header">
                                 <h4>AO Map</h4>
-                                <button class="download-btn" id="download-ao" title="Download AO Map">
-                                    <i class="fas fa-download"></i>
-                                </button>
+                                <div class="map-actions">
+                                    <select class="map-format-select" id="ao-format">
+                                        <option value="png">PNG</option>
+                                        <option value="webp">WebP</option>
+                                        <option value="jpeg">JPEG</option>
+                                    </select>
+                                    <button class="download-btn" id="download-ao" title="Download AO Map">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                </div>
                             </div>
                             <div class="canvas-wrapper">
                                 <canvas id="ao-map"></canvas>
@@ -415,198 +331,154 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="map-preview">
-                            <div class="map-header">
-                                <h4>Emission Map</h4>
-                                <button class="download-btn" id="download-emission" title="Download Emission Map">
-                                    <i class="fas fa-download"></i>
-                                </button>
-                            </div>
-                            <div class="canvas-wrapper">
-                                <canvas id="emission-map"></canvas>
-                                <div class="map-overlay">
-                                    <span class="map-label">Emission</span>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </main>
         </div>
 
-        <!-- UV Editor Page -->
-        <div class="page-content hidden" id="uv-editor-page">
-            <div class="uv-editor-container">
-                <div class="uv-editor-main">
-                    <div class="uv-canvas-container">
-                        <canvas id="uv-canvas"></canvas>
-                        <div class="uv-overlay">
-                            <div class="uv-controls">
-                                <button id="uv-pan" class="uv-tool active" title="Pan View"><i class="fas fa-hand-paper"></i></button>
-                                <button id="uv-select" class="uv-tool" title="Select Islands"><i class="fas fa-object-group"></i></button>
-                                <button id="uv-move" class="uv-tool" title="Move Selection"><i class="fas fa-arrows-alt"></i></button>
-                                <button id="uv-rotate" class="uv-tool" title="Rotate Selection"><i class="fas fa-sync"></i></button>
-                                <button id="uv-scale" class="uv-tool" title="Scale Selection"><i class="fas fa-expand-arrows-alt"></i></button>
-                            </div>
-                            <div class="uv-zoom-controls">
-                                <button id="uv-zoom-in" title="Zoom In"><i class="fas fa-search-plus"></i></button>
-                                <button id="uv-zoom-out" title="Zoom Out"><i class="fas fa-search-minus"></i></button>
-                                <button id="uv-reset" title="Reset View"><i class="fas fa-home"></i></button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="uv-preview">
-                        <h4>3D Preview</h4>
-                        <div id="uv-model-container"></div>
-                    </div>
-                </div>
-                <div class="uv-editor-sidebar">
-                    <div class="uv-editor-section">
-                        <h4>UV Transformation</h4>
-                        <div class="uv-editor-controls">
-                            <div class="control-group">
-                                <label for="uv-edit-pos-x">Position X</label>
-                                <div class="number-input">
-                                    <input type="number" id="uv-edit-pos-x" step="0.01" value="0">
-                                </div>
-                            </div>
-                            <div class="control-group">
-                                <label for="uv-edit-pos-y">Position Y</label>
-                                <div class="number-input">
-                                    <input type="number" id="uv-edit-pos-y" step="0.01" value="0">
-                                </div>
-                            </div>
-                            <div class="control-group">
-                                <label for="uv-edit-rotation">Rotation</label>
-                                <div class="number-input">
-                                    <input type="number" id="uv-edit-rotation" step="1" value="0">
-                                </div>
-                            </div>
-                            <div class="control-group">
-                                <label for="uv-edit-scale-x">Scale X</label>
-                                <div class="number-input">
-                                    <input type="number" id="uv-edit-scale-x" step="0.01" min="0.01" value="1">
-                                </div>
-                            </div>
-                            <div class="control-group">
-                                <label for="uv-edit-scale-y">Scale Y</label>
-                                <div class="number-input">
-                                    <input type="number" id="uv-edit-scale-y" step="0.01" min="0.01" value="1">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="uv-editor-section">
-                        <h4>UV Operations</h4>
-                        <div class="uv-operations">
-                            <button id="uv-unwrap" class="uv-op-btn">Unwrap</button>
-                            <button id="uv-reset-all" class="uv-op-btn">Reset All</button>
-                            <button id="uv-pack" class="uv-op-btn">Pack Islands</button>
-                            <button id="uv-mirror-h" class="uv-op-btn">Mirror Horizontal</button>
-                            <button id="uv-mirror-v" class="uv-op-btn">Mirror Vertical</button>
-                        </div>
-                    </div>
-                    
-                    <div class="uv-editor-section">
-                        <h4>Display Options</h4>
-                        <div class="uv-display-options">
-                            <div class="option-checkbox">
-                                <input type="checkbox" id="uv-show-grid" checked>
-                                <label for="uv-show-grid">Show Grid</label>
-                            </div>
-                            <div class="option-checkbox">
-                                <input type="checkbox" id="uv-show-checkerboard" checked>
-                                <label for="uv-show-checkerboard">Show Checkerboard</label>
-                            </div>
-                            <div class="option-checkbox">
-                                <input type="checkbox" id="uv-show-texture" checked>
-                                <label for="uv-show-texture">Show Texture</label>
-                            </div>
-                            <div class="option-checkbox">
-                                <input type="checkbox" id="uv-show-seams">
-                                <label for="uv-show-seams">Highlight Seams</label>
-                            </div>
-                            <div class="control-group">
-                                <label for="uv-overlay-opacity">Texture Opacity</label>
-                                <div class="slider-container">
-                                    <input type="range" id="uv-overlay-opacity" min="0" max="1" step="0.1" value="0.7">
-                                    <span class="value" id="uv-overlay-opacity-value">0.7</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="uv-editor-actions">
-                        <button id="uv-apply" class="action-btn">Apply Changes</button>
-                        <button id="uv-cancel" class="action-btn secondary">Cancel</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Help Page -->
         <div class="page-content hidden" id="help-page">
             <div class="help-container">
-                <h2>Help & Documentation</h2>
+                <h2>How to Use Texture Gen v2</h2>
+                <p class="help-description">This tool converts a single image into a complete set of PBR texture maps. Here's how to get started:</p>
                 
-                <div class="help-section">
-                    <h3>Getting Started</h3>
-                    <p>Texture Gen v3 is a powerful tool for creating PBR texture maps from a single base image. This guide will help you make the most of its features.</p>
+                <div class="help-section-grid">
+                    <div class="help-section">
+                        <h3>Basic Controls</h3>
+                        <ul class="help-list">
+                            <li>
+                                <strong>Upload Image:</strong> Click "Browse Files" or drag-and-drop your image
+                            </li>
+                            <li>
+                                <strong>3D Preview:</strong> View your texture applied to a 3D sphere in real-time
+                            </li>
+                            <li>
+                                <strong>Rotation:</strong> Control the 3D model rotation manually or enable auto-rotate
+                            </li>
+                            <li>
+                                <strong>Material Presets:</strong> Quickly apply settings for common material types
+                            </li>
+                            <li>
+                                <strong>Base Color Strength:</strong> Adjust the intensity of the base color/albedo map
+                            </li>
+                            <li>
+                                <strong>Normal Strength:</strong> Control the intensity of surface bumps and details
+                            </li>
+                            <li>
+                                <strong>Roughness Strength:</strong> Modify how rough or smooth the surface appears
+                            </li>
+                            <li>
+                                <strong>Displacement Strength:</strong> Adjust how much the texture displaces the geometry
+                            </li>
+                            <li>
+                                <strong>AO Strength:</strong> Control the ambient occlusion intensity
+                            </li>
+                            <li>
+                                <strong>Metalness:</strong> Adjust how metallic the material appears
+                            </li>
+                            <li>
+                                <strong>Light Position:</strong> Change the position of the light to see how it affects the material
+                            </li>
+                        </ul>
+                    </div>
                     
-                    <h4>Basic Workflow:</h4>
-                    <ol>
-                        <li>Upload a texture image using drag & drop or the browse button</li>
-                        <li>Adjust texture settings to your liking</li>
-                        <li>Use the seamless mode to create tileable textures</li>
-                        <li>Export individual maps or all maps as a ZIP file</li>
-                    </ol>
+                    <div class="help-section">
+                        <h3>Exporting Your Maps</h3>
+                        <ul class="help-list">
+                            <li>
+                                <strong>Download Individual Maps</strong>
+                                <p>Use the download button on each map preview to save that specific texture map. Select your preferred format (PNG, WebP, or JPEG) before downloading.</p>
+                            </li>
+                            <li>
+                                <strong>Export All Maps as ZIP</strong>
+                                <p>Click the "Export All Maps as ZIP" button to download all selected maps in a single ZIP archive. Check or uncheck the map types in the Export Options section and select your preferred format.</p>
+                            </li>
+                            <li>
+                                <strong>Export Three.js Code</strong>
+                                <p>Generate ready-to-use Three.js code that implements your material with all the current settings. This is perfect for web-based 3D projects.</p>
+                            </li>
+                            <li>
+                                <strong>Export Formats</strong>
+                                <p>
+                                    <strong>PNG:</strong> Lossless quality, ideal for normal and displacement maps<br>
+                                    <strong>WebP:</strong> Excellent balance between quality and file size, supported by most modern browsers<br>
+                                    <strong>JPEG:</strong> Smallest file size but lossy compression (best for base color maps only)
+                                </p>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
                 
                 <div class="help-section">
-                    <h3>Features in v3</h3>
-                    <ul>
+                    <h3>Material Presets</h3>
+                    <ul class="help-list">
                         <li>
-                            <strong>Seamless Textures:</strong> Create tileable textures with the interactive seamless mode.
-                            Preview the results instantly in the tiled view.
+                            <strong>Default:</strong> Balanced settings, good starting point for most textures
                         </li>
                         <li>
-                            <strong>Enhanced UV Controls:</strong> More precise control over texture projection with separate X/Y repeat, offset, rotation, and scale.
+                            <strong>Metal:</strong> High metalness, low roughness, enhanced reflectivity
                         </li>
                         <li>
-                            <strong>UV Editor:</strong> Edit UV mapping directly with the UV Editor tab. Reposition, scale, and rotate UV islands.
+                            <strong>Wood:</strong> Low metalness, medium roughness, enhanced displacement
+                        </li>
+                        <li>
+                            <strong>Stone:</strong> Low metalness, high roughness, enhanced normal detail
+                        </li>
+                        <li>
+                            <strong>Fabric:</strong> Zero metalness, high roughness, subtle normal mapping
+                        </li>
+                        <li>
+                            <strong>Plastic:</strong> Very low metalness, medium-low roughness, smooth finish
                         </li>
                     </ul>
                 </div>
                 
                 <div class="help-section">
-                    <h3>Keyboard Shortcuts</h3>
-                    <div class="shortcuts-grid">
-                        <div class="shortcut">
-                            <kbd>Space</kbd>
-                            <span>Toggle auto-rotation</span>
-                        </div>
-                        <div class="shortcut">
-                            <kbd>E</kbd>
-                            <span>Export all maps as ZIP</span>
-                        </div>
-                        <div class="shortcut">
-                            <kbd>C</kbd>
-                            <span>Export Three.js code</span>
-                        </div>
-                        <div class="shortcut">
-                            <kbd>Arrow Keys</kbd>
-                            <span>Rotate model</span>
-                        </div>
-                        <div class="shortcut">
-                            <kbd>H</kbd>
-                            <span>Toggle HDRI lighting</span>
-                        </div>
-                        <div class="shortcut">
-                            <kbd>T</kbd>
-                            <span>Toggle seamless mode</span>
-                        </div>
-                    </div>
+                    <h3>Map Types Explained</h3>
+                    <ul class="help-list">
+                        <li>
+                            <strong>Base Color Map:</strong> Also known as albedo or diffuse map, this represents the color of the surface without lighting information.
+                        </li>
+                        <li>
+                            <strong>Normal Map:</strong> Creates the illusion of detailed 3D surface features by encoding surface direction.
+                        </li>
+                        <li>
+                            <strong>Roughness Map:</strong> Defines how rough or smooth a surface is, affecting how light scatters across it.
+                        </li>
+                        <li>
+                            <strong>Displacement Map:</strong> Actually displaces the geometry to create real surface detail (unlike normal maps which only simulate detail).
+                        </li>
+                        <li>
+                            <strong>Ambient Occlusion (AO) Map:</strong> Represents how exposed each point of the surface is to ambient lighting.
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="help-section">
+                    <h3>Tips for Best Results</h3>
+                    <ul class="help-list">
+                        <li>
+                            <strong>Use High-Resolution Images:</strong> For best detail in all generated maps, start with high-resolution source images.
+                        </li>
+                        <li>
+                            <strong>Even Lighting:</strong> Source images with even, diffuse lighting work best. Avoid images with harsh shadows or reflections.
+                        </li>
+                        <li>
+                            <strong>Try Different Presets:</strong> Use the material presets as starting points, then fine-tune with the sliders.
+                        </li>
+                        <li>
+                            <strong>Format Selection:</strong> Use PNG for technical maps (normal, displacement), WebP for general use, and JPEG only for base color where quality is less critical.
+                        </li>
+                        <li>
+                            <strong>Adjust Map Strength:</strong> Use the sliders to fine-tune each map's intensity for your specific texture.
+                        </li>
+                        <li>
+                            <strong>Light Position:</strong> Adjust the light position to better evaluate how your material reacts to different lighting conditions.
+                        </li>
+                        <li>
+                            <strong>Metalness Adjustment:</strong> For non-metal materials, keep metalness at 0. For metals, increase it and reduce roughness.
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>
@@ -614,46 +486,134 @@
         <!-- About Page -->
         <div class="page-content hidden" id="about-page">
             <div class="about-container">
-                <h2>About Texture Gen v3</h2>
+                <h2>About Texture Gen v2</h2>
+                <p class="about-description">
+                    Texture Gen v2 is a powerful tool that transforms a single image into a complete set of PBR texture maps. Built with modern web technologies, it offers artists, designers, and developers a simple way to create professional material sets for 3D projects.
+                </p>
                 
-                <div class="about-section">
-                    <h3>What is Texture Gen?</h3>
+                <p class="about-description">
+                    The generator uses advanced image processing techniques to analyze source images and extract information about surface details, lighting, and material properties. All processing happens directly in your browser – no server uploads required.
+                </p>
+                
+                <div class="features-container">
+                    <h3>Key Features</h3>
+                    <div class="features-grid">
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>One-click generation of complete PBR map sets</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>Real-time 3D preview with interactive rotation</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>Material presets for common surfaces</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>Multiple export formats (PNG, WebP, JPEG)</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>Advanced normal map generation with detail enhancement</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>Intelligent roughness map calculation</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>Precise displacement map generation</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>Ambient occlusion map extraction from surface details</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>Fully adjustable material parameters</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>Individual map downloading</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>Complete map set export as ZIP</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>Ready-to-use Three.js code export</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>Intuitive, responsive user interface</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>Client-side processing (no uploads)</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="use-cases">
+                    <h3>Use Cases</h3>
+                    <div class="use-cases-grid">
+                        <div class="use-case-item">
+                            <i class="fas fa-check"></i>
+                            <span>Game development asset creation</span>
+                        </div>
+                        <div class="use-case-item">
+                            <i class="fas fa-check"></i>
+                            <span>Architectural visualization materials</span>
+                        </div>
+                        <div class="use-case-item">
+                            <i class="fas fa-check"></i>
+                            <span>Web-based 3D experiences</span>
+                        </div>
+                        <div class="use-case-item">
+                            <i class="fas fa-check"></i>
+                            <span>VR/AR development</span>
+                        </div>
+                        <div class="use-case-item">
+                            <i class="fas fa-check"></i>
+                            <span>3D printing texture mapping</span>
+                        </div>
+                        <div class="use-case-item">
+                            <i class="fas fa-check"></i>
+                            <span>Product visualization</span>
+                        </div>
+                        <div class="use-case-item">
+                            <i class="fas fa-check"></i>
+                            <span>3D character material creation</span>
+                        </div>
+                        <div class="use-case-item">
+                            <i class="fas fa-check"></i>
+                            <span>Education and learning</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="technical-notes">
+                    <h3>Technical Notes</h3>
                     <p>
-                        Texture Gen is a professional PBR texture generation tool that allows you to create a 
-                        complete set of texture maps from a single input image. Perfect for game developers, 
-                        3D artists, and designers who need high-quality materials quickly.
+                        Texture Gen v2 works entirely in your browser with no server-side processing. Your images are never uploaded to any server, ensuring your designs remain private and secure.
+                    </p>
+                    <p>
+                        The application uses WebGL through Three.js for the 3D preview, allowing you to see your material in action as you adjust settings.
+                    </p>
+                    <p>
+                        All texture maps are generated using advanced image processing algorithms that analyze your source image to extract surface details, lighting information, and material properties.
+                    </p>
+                    <p>
+                        The exported Three.js code is designed to be lightweight and compatible with modern browsers, providing an easy way to use your generated materials in web-based 3D projects.
                     </p>
                 </div>
                 
-                <div class="about-section">
-                    <h3>Features</h3>
-                    <ul>
-                        <li>Generate Base Color, Normal, Roughness, Displacement, AO, and Emission maps</li>
-                        <li>Live 3D preview</li>
-                        <li>Interactive seamless texture creation with real-time preview</li>
-                        <li>Advanced UV projection controls</li>
-                        <li>Integrated UV editor</li>
-                        <li>Export individual maps or complete texture sets</li>
-                        <li>Generate Three.js code for your materials</li>
-                    </ul>
-                </div>
-                
-                <div class="about-section">
-                    <h3>Credits</h3>
-                    <p>
-                        Designed and developed by <a href="https://enricodeiana.design/" target="_blank">Enrico Deiana</a>.<br>
-                        Built with Three.js, JSZip, and FileSaver.js.
-                    </p>
-                    <p>
-                        Have suggestions or found a bug? Please reach out at 
-                        <a href="mailto:contact@enricodeiana.design">contact@enricodeiana.design</a>
-                    </p>
-                </div>
-                
-                <div class="about-section version-info">
-                    <h3>Version Information</h3>
-                    <p>Version 3.0.0</p>
-                    <p>Released: March 2025</p>
+                <div class="about-footer">
+                    <p>Created with <i class="fas fa-heart"></i> by Enrico Deiana</p>
+                    <p>Version 2.0 © 2023</p>
                 </div>
             </div>
         </div>
@@ -682,7 +642,6 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-    
     <!-- Main script -->
     <script src="script.js"></script>
 </body>
