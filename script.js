@@ -1,30 +1,16 @@
-// Texture Gen v3 - Main JavaScript
+// Wait until everything is fully loaded
 document.addEventListener('DOMContentLoaded', function() {
     
     // Global variables
-    let scene, camera, renderer, currentModel, light, grid;
-    let uvScene, uvCamera, uvRenderer;
-    let baseTexture, normalTexture, roughnessTexture, displacementTexture, aoTexture, emissionTexture;
-    let originalImageData, seamlessImageData;
+    let scene, camera, renderer, sphere, light, grid;
+    let baseTexture, normalTexture, roughnessTexture, displacementTexture, aoTexture;
+    let originalImageData;
     let hasUploadedImage = false;
     let autoRotate = true;
     let rotationSpeed = { x: 0.0005, y: 0.004 };
     let isDraggingSlider = false;
     let animationFrameId = null;
-    let useHDRI = false;
-    let pmremGenerator, envMap;
-    let seamlessModeActive = false;
-    
-    // UV Editor variables
-    let uvCanvas, uvContext;
-    let uvPreviewScene, uvPreviewCamera, uvPreviewRenderer, uvPreviewModel;
-    let uvIslands = [];
-    let selectedIslands = [];
-    let uvZoom = 1;
-    let uvPan = { x: 0, y: 0 };
-    let uvActiveTool = 'pan';
-    let isDragging = false;
-    let dragStart = { x: 0, y: 0 };
+    let activePreset = "default";
     
     // DOM Elements
     const uploadArea = document.getElementById('upload-area');
@@ -39,10 +25,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const navTabs = document.querySelectorAll('.nav-tab');
     const pages = document.querySelectorAll('.page-content');
     
-    // Controls Tabs
-    const controlsTabs = document.querySelectorAll('.controls-tab');
-    const controlsPanels = document.querySelectorAll('.controls-panel');
-    
     // Rotation controls
     const rotationX = document.getElementById('rotation-x');
     const rotationY = document.getElementById('rotation-y');
@@ -54,7 +36,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const roughnessCanvas = document.getElementById('roughness-map');
     const displacementCanvas = document.getElementById('displacement-map');
     const aoCanvas = document.getElementById('ao-map');
-    const emissionCanvas = document.getElementById('emission-map');
     
     // Control Elements
     const baseStrength = document.getElementById('base-strength');
@@ -63,53 +44,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const displacementStrength = document.getElementById('displacement-strength');
     const aoStrength = document.getElementById('ao-strength');
     const metalness = document.getElementById('metalness');
-    const emissionStrength = document.getElementById('emission-strength');
-    const uvRepeatX = document.getElementById('uv-repeat-x');
-    const uvRepeatY = document.getElementById('uv-repeat-y');
-    const uvOffsetX = document.getElementById('uv-offset-x');
-    const uvOffsetY = document.getElementById('uv-offset-y');
-    const uvRotation = document.getElementById('uv-rotation');
-    const uvScale = document.getElementById('uv-scale');
     const lightX = document.getElementById('light-x');
     const lightY = document.getElementById('light-y');
     const lightZ = document.getElementById('light-z');
-    const useHDRIToggle = document.getElementById('use-hdri');
-    const materialTypeSelect = document.getElementById('material-type');
-    const normalAlgorithmSelect = document.getElementById('normal-algorithm');
-    const aoRadius = document.getElementById('ao-radius');
-    
-    // Seamless controls
-    const toggleSeamlessBtn = document.getElementById('toggle-seamless');
-    const seamlessPanel = document.getElementById('seamless-panel');
-    const seamlessStrength = document.getElementById('seamless-strength');
-    const seamlessMethod = document.getElementById('seamless-method');
-    const seamlessTiles = document.getElementById('seamless-tiles');
-    const seamlessPreviewCanvas = document.getElementById('seamless-preview');
-    
-    // UV Editor elements
-    uvCanvas = document.getElementById('uv-canvas');
-    const uvModelContainer = document.getElementById('uv-model-container');
-    const uvTools = document.querySelectorAll('.uv-tool');
-    const uvZoomIn = document.getElementById('uv-zoom-in');
-    const uvZoomOut = document.getElementById('uv-zoom-out');
-    const uvReset = document.getElementById('uv-reset');
-    const uvEditPosX = document.getElementById('uv-edit-pos-x');
-    const uvEditPosY = document.getElementById('uv-edit-pos-y');
-    const uvEditRotation = document.getElementById('uv-edit-rotation');
-    const uvEditScaleX = document.getElementById('uv-edit-scale-x');
-    const uvEditScaleY = document.getElementById('uv-edit-scale-y');
-    const uvShowGrid = document.getElementById('uv-show-grid');
-    const uvShowCheckerboard = document.getElementById('uv-show-checkerboard');
-    const uvShowTexture = document.getElementById('uv-show-texture');
-    const uvShowSeams = document.getElementById('uv-show-seams');
-    const uvOverlayOpacity = document.getElementById('uv-overlay-opacity');
-    const uvApplyBtn = document.getElementById('uv-apply');
-    const uvCancelBtn = document.getElementById('uv-cancel');
-    const uvUnwrapBtn = document.getElementById('uv-unwrap');
-    const uvResetAllBtn = document.getElementById('uv-reset-all');
-    const uvPackBtn = document.getElementById('uv-pack');
-    const uvMirrorHBtn = document.getElementById('uv-mirror-h');
-    const uvMirrorVBtn = document.getElementById('uv-mirror-v');
     
     // Value display elements
     const baseValue = document.getElementById('base-value');
@@ -118,17 +55,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const displacementValue = document.getElementById('displacement-value');
     const aoValue = document.getElementById('ao-value');
     const metalnessValue = document.getElementById('metalness-value');
-    const emissionValue = document.getElementById('emission-value');
-    const uvRepeatXValue = document.getElementById('uv-repeat-x-value');
-    const uvRepeatYValue = document.getElementById('uv-repeat-y-value');
-    const uvOffsetXValue = document.getElementById('uv-offset-x-value');
-    const uvOffsetYValue = document.getElementById('uv-offset-y-value');
-    const uvRotationValue = document.getElementById('uv-rotation-value');
-    const uvScaleValue = document.getElementById('uv-scale-value');
-    const aoRadiusValue = document.getElementById('ao-radius-value');
-    const seamlessStrengthValue = document.getElementById('seamless-strength-value');
-    const seamlessTilesValue = document.getElementById('seamless-tiles-value');
-    const uvOverlayOpacityValue = document.getElementById('uv-overlay-opacity-value');
     
     // Download buttons
     const downloadBase = document.getElementById('download-base');
@@ -136,7 +62,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const downloadRoughness = document.getElementById('download-roughness');
     const downloadDisplacement = document.getElementById('download-displacement');
     const downloadAO = document.getElementById('download-ao');
-    const downloadEmission = document.getElementById('download-emission');
     const exportZip = document.getElementById('export-zip');
     const exportThreejs = document.getElementById('export-threejs');
     
@@ -146,8 +71,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const exportRoughness = document.getElementById('export-roughness');
     const exportDisplacement = document.getElementById('export-displacement');
     const exportAO = document.getElementById('export-ao');
-    const exportEmission = document.getElementById('export-emission');
-    const formatRadios = document.querySelectorAll('input[name="format"]');
+    
+    // Format selectors
+    const exportFormat = document.getElementById('export-format');
+    const baseFormat = document.getElementById('base-format');
+    const normalFormat = document.getElementById('normal-format');
+    const roughnessFormat = document.getElementById('roughness-format');
+    const displacementFormat = document.getElementById('displacement-format');
+    const aoFormat = document.getElementById('ao-format');
+    
+    // Material presets
+    const presetButtons = document.querySelectorAll('.preset-btn');
     
     // Processing indicator
     const processingIndicator = document.getElementById('processing-indicator');
@@ -156,6 +90,76 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Notification container
     const notificationContainer = document.getElementById('notification-container');
+    
+    // Humorous loading messages
+    const loadingMessages = [
+        "Teaching photons how to bounce properly...",
+        "Converting 2D boringness into 3D awesomeness...",
+        "Convincing pixels to work in the third dimension...",
+        "Calculating normal vectors (they seem quite abnormal)...",
+        "Making your texture look fabulous in 3D...",
+        "Generating bumps where there were none before...",
+        "Analyzing surface details with microscopic precision...",
+        "Persuading light to interact with virtual materials...",
+        "Extracting roughness from smooth images (it's rough work)...",
+        "Creating ambient occlusion where the sun don't shine...",
+        "Giving depth to the depthless...",
+        "Turning flat images into not-so-flat textures...",
+        "Simulating reality one pixel at a time...",
+        "Activating hyper-realistic texture algorithms...",
+        "Applying digital sandpaper for perfect roughness...",
+        "Making virtual surfaces feel touchable...",
+        "Crafting PBR magic with digital pixie dust...",
+        "Converting your image into a material science miracle...",
+        "Enhancing reality without the RTX graphics card...",
+        "Calculating how shadows would hide if they could..."
+    ];
+    
+    // Material preset definitions
+    const materialPresets = {
+        default: {
+            normalStrength: 1.0,
+            roughnessStrength: 0.5,
+            displacementStrength: 0.2,
+            aoStrength: 0.5,
+            metalness: 0.0
+        },
+        metal: {
+            normalStrength: 0.8,
+            roughnessStrength: 0.2,
+            displacementStrength: 0.1,
+            aoStrength: 0.3,
+            metalness: 0.9
+        },
+        wood: {
+            normalStrength: 1.2,
+            roughnessStrength: 0.7,
+            displacementStrength: 0.3,
+            aoStrength: 0.8,
+            metalness: 0.0
+        },
+        stone: {
+            normalStrength: 1.5,
+            roughnessStrength: 0.8,
+            displacementStrength: 0.4,
+            aoStrength: 0.7,
+            metalness: 0.0
+        },
+        fabric: {
+            normalStrength: 0.7,
+            roughnessStrength: 0.9,
+            displacementStrength: 0.15,
+            aoStrength: 0.6,
+            metalness: 0.0
+        },
+        plastic: {
+            normalStrength: 0.6,
+            roughnessStrength: 0.3,
+            displacementStrength: 0.1,
+            aoStrength: 0.4,
+            metalness: 0.1
+        }
+    };
     
     // Initialize the application
     init();
@@ -185,9 +189,6 @@ document.addEventListener('DOMContentLoaded', function() {
             // Set up page navigation
             setupNavigation();
             
-            // Initialize UV Editor when needed
-            setupControlsTabs();
-            
         } catch (error) {
             console.error('Error initializing application:', error);
             showNotification('Error initializing application. Please refresh the page.', 'error');
@@ -214,11 +215,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         setTimeout(() => {
                             page.style.opacity = '1';
                             page.style.transform = 'translateY(0)';
-                            
-                            // Initialize UV Editor if navigating to UV editor page
-                            if (targetPage === 'uv-editor' && !uvRenderer) {
-                                initUVEditor();
-                            }
                         }, 50);
                     } else {
                         page.style.opacity = '0';
@@ -226,31 +222,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         setTimeout(() => {
                             page.classList.add('hidden');
                         }, 300);
-                    }
-                });
-            });
-        });
-    }
-    
-    // Set up controls tabs
-    function setupControlsTabs() {
-        controlsTabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                // Remove active class from all tabs
-                controlsTabs.forEach(t => t.classList.remove('active'));
-                
-                // Add active class to clicked tab
-                tab.classList.add('active');
-                
-                // Get target panel
-                const targetControls = tab.dataset.controls;
-                
-                // Hide all panels and show the target
-                controlsPanels.forEach(panel => {
-                    if (panel.id === `${targetControls}-controls`) {
-                        panel.classList.add('active');
-                    } else {
-                        panel.classList.remove('active');
                     }
                 });
             });
@@ -275,12 +246,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         renderer.setSize(modelContainer.clientWidth, modelContainer.clientHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
-        renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.outputEncoding = THREE.sRGBEncoding;
-        
-        // Setup for HDRI environment
-        pmremGenerator = new THREE.PMREMGenerator(renderer);
-        pmremGenerator.compileEquirectangularShader();
         
         // Append renderer to container
         modelContainer.appendChild(renderer.domElement);
@@ -304,8 +269,8 @@ document.addEventListener('DOMContentLoaded', function() {
         grid.position.y = -1.5;
         scene.add(grid);
     
-        // Create initial sphere model
-        createModel();
+        // Create initial sphere
+        createSphere();
         
         // Add loading indicator until fully loaded
         showLoadingIndicator('Initializing 3D environment...', 0);
@@ -329,912 +294,21 @@ document.addEventListener('DOMContentLoaded', function() {
         animate();
     }
     
-    // Initialize the UV Editor
-    function initUVEditor() {
-        if (!uvCanvas) return;
-        
-        // Set up canvas
-        uvContext = uvCanvas.getContext('2d');
-        
-        // Adjust canvas size
-        resizeUVCanvas();
-        
-        // Create UV preview scene
-        uvPreviewScene = new THREE.Scene();
-        uvPreviewScene.background = new THREE.Color(0x0d1117);
-        
-        // Create camera
-        uvPreviewCamera = new THREE.PerspectiveCamera(75, uvModelContainer.clientWidth / uvModelContainer.clientHeight, 0.1, 1000);
-        uvPreviewCamera.position.z = 2;
-        
-        // Create renderer
-        uvPreviewRenderer = new THREE.WebGLRenderer({ 
-            antialias: true 
-        });
-        uvPreviewRenderer.setSize(uvModelContainer.clientWidth, uvModelContainer.clientHeight);
-        uvPreviewRenderer.setPixelRatio(window.devicePixelRatio);
-        
-        // Append renderer to container
-        uvModelContainer.appendChild(uvPreviewRenderer.domElement);
-        
-        // Add lighting
-        const uvLight = new THREE.DirectionalLight(0xffffff, 1);
-        uvLight.position.set(1, 1, 1);
-        uvPreviewScene.add(uvLight);
-        
-        const uvAmbient = new THREE.AmbientLight(0xffffff, 0.5);
-        uvPreviewScene.add(uvAmbient);
-        
-        // Create preview model (same as current model)
-        createUVPreviewModel();
-        
-        // Start UV preview animation
-        animateUVPreview();
-        
-        // Draw initial UV layout
-        drawUVGrid();
-        
-        // Set up UV editor event listeners
-        setupUVEditorEvents();
-    }
-    
-    // Resize UV canvas to fit container
-    function resizeUVCanvas() {
-        const container = uvCanvas.parentElement;
-        uvCanvas.width = container.clientWidth;
-        uvCanvas.height = container.clientHeight;
-    }
-    
-    // Create UV preview model
-    function createUVPreviewModel() {
-        // Remove existing model if present
-        if (uvPreviewModel) {
-            uvPreviewScene.remove(uvPreviewModel);
+    // Create or update the sphere with textures
+    function createSphere() {
+        // Remove existing sphere if it exists
+        if (sphere) {
+            scene.remove(sphere);
         }
         
-        // Create geometry (sphere only)
-        const geometry = new THREE.SphereGeometry(1, 32, 32);
-        
-        // Create material
-        const material = new THREE.MeshStandardMaterial({
-            color: 0xffffff,
-            roughness: 0.5,
-            metalness: 0.1
-        });
-        
-        // Apply textures if available
-        if (baseTexture) material.map = baseTexture;
-        if (normalTexture) material.normalMap = normalTexture;
-        if (roughnessTexture) material.roughnessMap = roughnessTexture;
-        if (displacementTexture) material.displacementMap = displacementTexture;
-        if (aoTexture) material.aoMap = aoTexture;
-        if (emissionTexture) material.emissiveMap = emissionTexture;
-        
-        // Set up UV2 for ambient occlusion
-        geometry.setAttribute('uv2', geometry.attributes.uv);
-        
-        // Create mesh
-        uvPreviewModel = new THREE.Mesh(geometry, material);
-        uvPreviewScene.add(uvPreviewModel);
-        
-        // Extract UV islands for editor
-        extractUVIslands(geometry);
-    }
-    
-    // Extract UV islands from geometry
-    function extractUVIslands(geometry) {
-        const positions = geometry.attributes.position.array;
-        const uvs = geometry.attributes.uv.array;
-        const indices = geometry.index ? geometry.index.array : null;
-        
-        uvIslands = [];
-        
-        // If we have indexed geometry
-        if (indices) {
-            // Process by faces (triangles)
-            for (let i = 0; i < indices.length; i += 3) {
-                const face = [indices[i], indices[i+1], indices[i+2]];
-                const faceUVs = face.map(idx => {
-                    return {
-                        x: uvs[idx * 2],
-                        y: uvs[idx * 2 + 1]
-                    };
-                });
-                
-                uvIslands.push({
-                    id: i / 3,
-                    uvs: faceUVs,
-                    selected: false
-                });
-            }
-        } else {
-            // Non-indexed geometry, process by vertex trios
-            for (let i = 0; i < positions.length; i += 9) {
-                const faceUVs = [
-                    { x: uvs[i/3 * 2], y: uvs[i/3 * 2 + 1] },
-                    { x: uvs[(i/3 + 1) * 2], y: uvs[(i/3 + 1) * 2 + 1] },
-                    { x: uvs[(i/3 + 2) * 2], y: uvs[(i/3 + 2) * 2 + 1] }
-                ];
-                
-                uvIslands.push({
-                    id: i / 9,
-                    uvs: faceUVs,
-                    selected: false
-                });
-            }
-        }
-        
-        // Draw the UV islands
-        drawUVIslands();
-    }
-    
-    // Draw UV grid
-    function drawUVGrid() {
-        if (!uvContext) return;
-        
-        const width = uvCanvas.width;
-        const height = uvCanvas.height;
-        
-        // Clear canvas
-        uvContext.clearRect(0, 0, width, height);
-        
-        // Scale factor (UV space is 0-1)
-        const scale = Math.min(width, height) * 0.8 * uvZoom;
-        
-        // Center offset
-        const offsetX = width / 2 + uvPan.x;
-        const offsetY = height / 2 + uvPan.y;
-        
-        // Draw background
-        uvContext.fillStyle = '#161b22';
-        uvContext.fillRect(0, 0, width, height);
-        
-        // Check if grid should be shown
-        if (uvShowGrid && uvShowGrid.checked) {
-            // Draw UV space border (0-1 square)
-            uvContext.strokeStyle = '#30363d';
-            uvContext.lineWidth = 2;
-            uvContext.strokeRect(
-                offsetX - scale / 2, 
-                offsetY - scale / 2, 
-                scale, 
-                scale
-            );
-            
-            // Draw grid lines
-            uvContext.strokeStyle = '#21262d';
-            uvContext.lineWidth = 1;
-            
-            // Horizontal lines
-            for (let i = 0; i <= 10; i++) {
-                const y = offsetY - scale / 2 + (i / 10) * scale;
-                uvContext.beginPath();
-                uvContext.moveTo(offsetX - scale / 2, y);
-                uvContext.lineTo(offsetX + scale / 2, y);
-                uvContext.stroke();
-            }
-            
-            // Vertical lines
-            for (let i = 0; i <= 10; i++) {
-                const x = offsetX - scale / 2 + (i / 10) * scale;
-                uvContext.beginPath();
-                uvContext.moveTo(x, offsetY - scale / 2);
-                uvContext.lineTo(x, offsetY + scale / 2);
-                uvContext.stroke();
-            }
-        }
-        
-        // Draw checkerboard pattern
-        if (uvShowCheckerboard && uvShowCheckerboard.checked) {
-            const checkSize = scale / 10;
-            uvContext.fillStyle = '#252525';
-            
-            for (let i = 0; i < 10; i++) {
-                for (let j = 0; j < 10; j++) {
-                    if ((i + j) % 2 === 0) {
-                        uvContext.fillRect(
-                            offsetX - scale / 2 + i * checkSize,
-                            offsetY - scale / 2 + j * checkSize,
-                            checkSize,
-                            checkSize
-                        );
-                    }
-                }
-            }
-        }
-        
-        // Draw texture overlay
-        if (uvShowTexture && uvShowTexture.checked && baseTexture && baseTexture.image) {
-            const opacity = uvOverlayOpacity ? parseFloat(uvOverlayOpacity.value) : 0.7;
-            uvContext.globalAlpha = opacity;
-            
-            // Draw the texture in the UV space
-            uvContext.drawImage(
-                baseTexture.image,
-                offsetX - scale / 2,
-                offsetY - scale / 2,
-                scale,
-                scale
-            );
-            
-            uvContext.globalAlpha = 1.0;
-        }
-    }
-    
-    // Draw UV islands
-    function drawUVIslands() {
-        if (!uvContext || !uvIslands) return;
-        
-        const width = uvCanvas.width;
-        const height = uvCanvas.height;
-        
-        // Scale factor for UV coordinates (0-1 range)
-        const scale = Math.min(width, height) * 0.8 * uvZoom;
-        
-        // Center offset
-        const offsetX = width / 2 + uvPan.x;
-        const offsetY = height / 2 + uvPan.y;
-        
-        // Draw each island
-        uvIslands.forEach(island => {
-            // Convert UV coordinates to canvas coordinates
-            const canvasCoords = island.uvs.map(uv => {
-                return {
-                    x: offsetX + (uv.x - 0.5) * scale,
-                    y: offsetY + (uv.y - 0.5) * scale
-                };
-            });
-            
-            // Draw the triangle
-            uvContext.beginPath();
-            uvContext.moveTo(canvasCoords[0].x, canvasCoords[0].y);
-            uvContext.lineTo(canvasCoords[1].x, canvasCoords[1].y);
-            uvContext.lineTo(canvasCoords[2].x, canvasCoords[2].y);
-            uvContext.closePath();
-            
-            // Fill style depends on selection state
-            if (island.selected) {
-                uvContext.fillStyle = 'rgba(60, 158, 255, 0.3)';
-                uvContext.strokeStyle = '#3c9eff';
-                uvContext.lineWidth = 2;
-            } else {
-                uvContext.fillStyle = 'rgba(255, 255, 255, 0.1)';
-                uvContext.strokeStyle = '#8b949e';
-                uvContext.lineWidth = 1;
-            }
-            
-            uvContext.fill();
-            uvContext.stroke();
-        });
-        
-        // Draw seams if enabled
-        if (uvShowSeams && uvShowSeams.checked) {
-            // For simplicity, we'll just highlight all edges
-            uvContext.strokeStyle = '#f85149';
-            uvContext.lineWidth = 2;
-            
-            uvIslands.forEach(island => {
-                const canvasCoords = island.uvs.map(uv => {
-                    return {
-                        x: offsetX + (uv.x - 0.5) * scale,
-                        y: offsetY + (uv.y - 0.5) * scale
-                    };
-                });
-                
-                uvContext.beginPath();
-                uvContext.moveTo(canvasCoords[0].x, canvasCoords[0].y);
-                uvContext.lineTo(canvasCoords[1].x, canvasCoords[1].y);
-                uvContext.lineTo(canvasCoords[2].x, canvasCoords[2].y);
-                uvContext.closePath();
-                uvContext.stroke();
-            });
-        }
-    }
-    
-    // Set up UV editor events
-    function setupUVEditorEvents() {
-        // Tool selection
-        uvTools.forEach(tool => {
-            tool.addEventListener('click', (e) => {
-                uvTools.forEach(t => t.classList.remove('active'));
-                tool.classList.add('active');
-                uvActiveTool = tool.id.replace('uv-', '');
-            });
-        });
-        
-        // Zoom controls
-        if (uvZoomIn) {
-            uvZoomIn.addEventListener('click', () => {
-                uvZoom = Math.min(uvZoom * 1.2, 5);
-                drawUVGrid();
-                drawUVIslands();
-            });
-        }
-        
-        if (uvZoomOut) {
-            uvZoomOut.addEventListener('click', () => {
-                uvZoom = Math.max(uvZoom / 1.2, 0.2);
-                drawUVGrid();
-                drawUVIslands();
-            });
-        }
-        
-        if (uvReset) {
-            uvReset.addEventListener('click', () => {
-                uvZoom = 1;
-                uvPan = { x: 0, y: 0 };
-                drawUVGrid();
-                drawUVIslands();
-            });
-        }
-        
-        // Canvas interactions
-        if (uvCanvas) {
-            uvCanvas.addEventListener('mousedown', (e) => {
-                const rect = uvCanvas.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                
-                isDragging = true;
-                dragStart = { x, y };
-                
-                if (uvActiveTool === 'select') {
-                    selectUVIslandAtPoint(x, y);
-                }
-            });
-            
-            uvCanvas.addEventListener('mousemove', (e) => {
-                if (!isDragging) return;
-                
-                const rect = uvCanvas.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                
-                const deltaX = x - dragStart.x;
-                const deltaY = y - dragStart.y;
-                
-                if (uvActiveTool === 'pan') {
-                    uvPan.x += deltaX;
-                    uvPan.y += deltaY;
-                    dragStart = { x, y };
-                    drawUVGrid();
-                    drawUVIslands();
-                } else if (uvActiveTool === 'move' && selectedIslands.length > 0) {
-                    // Convert screen movement to UV space movement
-                    const scale = Math.min(uvCanvas.width, uvCanvas.height) * 0.8 * uvZoom;
-                    const uvDeltaX = deltaX / scale;
-                    const uvDeltaY = deltaY / scale;
-                    
-                    // Move selected islands
-                    selectedIslands.forEach(islandId => {
-                        const island = uvIslands.find(i => i.id === islandId);
-                        if (island) {
-                            island.uvs.forEach(uv => {
-                                uv.x += uvDeltaX;
-                                uv.y += uvDeltaY;
-                            });
-                        }
-                    });
-                    
-                    dragStart = { x, y };
-                    drawUVGrid();
-                    drawUVIslands();
-                    
-                    // Update the position inputs
-                    updateUVTransformInputs();
-                }
-            });
-            
-            window.addEventListener('mouseup', () => {
-                isDragging = false;
-            });
-            
-            // Update display when options change
-            if (uvShowGrid) {
-                uvShowGrid.addEventListener('change', () => {
-                    drawUVGrid();
-                    drawUVIslands();
-                });
-            }
-            
-            if (uvShowCheckerboard) {
-                uvShowCheckerboard.addEventListener('change', () => {
-                    drawUVGrid();
-                    drawUVIslands();
-                });
-            }
-            
-            if (uvShowTexture) {
-                uvShowTexture.addEventListener('change', () => {
-                    drawUVGrid();
-                    drawUVIslands();
-                });
-            }
-            
-            if (uvShowSeams) {
-                uvShowSeams.addEventListener('change', () => {
-                    drawUVGrid();
-                    drawUVIslands();
-                });
-            }
-            
-            if (uvOverlayOpacity) {
-                uvOverlayOpacity.addEventListener('input', () => {
-                    if (uvOverlayOpacityValue) {
-                        uvOverlayOpacityValue.textContent = parseFloat(uvOverlayOpacity.value).toFixed(1);
-                    }
-                    drawUVGrid();
-                    drawUVIslands();
-                });
-            }
-        }
-        
-        // UV transformation inputs
-        const transformInputs = [uvEditPosX, uvEditPosY, uvEditRotation, uvEditScaleX, uvEditScaleY];
-        
-        transformInputs.forEach(input => {
-            if (input) {
-                input.addEventListener('change', () => {
-                    applyUVTransformation();
-                });
-            }
-        });
-        
-        // UV operations buttons
-        if (uvUnwrapBtn) {
-            uvUnwrapBtn.addEventListener('click', unwrapUVs);
-        }
-        
-        if (uvResetAllBtn) {
-            uvResetAllBtn.addEventListener('click', resetAllUVs);
-        }
-        
-        if (uvPackBtn) {
-            uvPackBtn.addEventListener('click', packUVIslands);
-        }
-        
-        if (uvMirrorHBtn) {
-            uvMirrorHBtn.addEventListener('click', () => mirrorUVIslands('horizontal'));
-        }
-        
-        if (uvMirrorVBtn) {
-            uvMirrorVBtn.addEventListener('click', () => mirrorUVIslands('vertical'));
-        }
-        
-        // Apply and cancel buttons
-        if (uvApplyBtn) {
-            uvApplyBtn.addEventListener('click', applyUVChanges);
-        }
-        
-        if (uvCancelBtn) {
-            uvCancelBtn.addEventListener('click', cancelUVChanges);
-        }
-    }
-    
-    // Select UV island at point
-    function selectUVIslandAtPoint(x, y) {
-        const width = uvCanvas.width;
-        const height = uvCanvas.height;
-        
-        // Scale factor for UV coordinates
-        const scale = Math.min(width, height) * 0.8 * uvZoom;
-        
-        // Center offset
-        const offsetX = width / 2 + uvPan.x;
-        const offsetY = height / 2 + uvPan.y;
-        
-        // Convert canvas coordinates to UV space
-        const uvX = ((x - offsetX) / scale) + 0.5;
-        const uvY = ((y - offsetY) / scale) + 0.5;
-        
-        // Check each island for containment
-        let foundIsland = false;
-        
-        for (let i = 0; i < uvIslands.length; i++) {
-            const island = uvIslands[i];
-            
-            if (pointInTriangle(
-                uvX, uvY,
-                island.uvs[0].x, island.uvs[0].y,
-                island.uvs[1].x, island.uvs[1].y,
-                island.uvs[2].x, island.uvs[2].y
-            )) {
-                // Toggle selection state
-                island.selected = !island.selected;
-                
-                // Update selected islands array
-                if (island.selected) {
-                    selectedIslands.push(island.id);
-                } else {
-                    const index = selectedIslands.indexOf(island.id);
-                    if (index > -1) {
-                        selectedIslands.splice(index, 1);
-                    }
-                }
-                
-                foundIsland = true;
-                break;
-            }
-        }
-        
-        // If clicked on empty space, clear selection
-        if (!foundIsland) {
-            uvIslands.forEach(island => island.selected = false);
-            selectedIslands = [];
-        }
-        
-        // Update displays
-        drawUVGrid();
-        drawUVIslands();
-        updateUVTransformInputs();
-    }
-    
-    // Helper: point in triangle test
-    function pointInTriangle(px, py, x1, y1, x2, y2, x3, y3) {
-        // Compute barycentric coordinates
-        const d1 = (px - x3) * (y2 - y3) - (x2 - x3) * (py - y3);
-        const d2 = (px - x1) * (y3 - y1) - (x3 - x1) * (py - y1);
-        const d3 = (px - x2) * (y1 - y2) - (x1 - x2) * (py - y2);
-        
-        const has_neg = (d1 < 0) || (d2 < 0) || (d3 < 0);
-        const has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
-        
-        return !(has_neg && has_pos);
-    }
-    
-    // Update UV transform inputs based on selection
-    function updateUVTransformInputs() {
-        if (selectedIslands.length === 0) {
-            // No selection, reset inputs
-            if (uvEditPosX) uvEditPosX.value = "0";
-            if (uvEditPosY) uvEditPosY.value = "0";
-            if (uvEditRotation) uvEditRotation.value = "0";
-            if (uvEditScaleX) uvEditScaleX.value = "1";
-            if (uvEditScaleY) uvEditScaleY.value = "1";
-            return;
-        }
-        
-        // Get first selected island for reference
-        const firstIsland = uvIslands.find(i => i.id === selectedIslands[0]);
-        if (!firstIsland) return;
-        
-        // Calculate center point of the first island
-        const center = {
-            x: (firstIsland.uvs[0].x + firstIsland.uvs[1].x + firstIsland.uvs[2].x) / 3,
-            y: (firstIsland.uvs[0].y + firstIsland.uvs[1].y + firstIsland.uvs[2].y) / 3
-        };
-        
-        // For simplicity, we're just setting position as the center point
-        // In a real UV editor, you'd have more complex transformations
-        if (uvEditPosX) uvEditPosX.value = center.x.toFixed(2);
-        if (uvEditPosY) uvEditPosY.value = center.y.toFixed(2);
-        
-        // Rotation and scale are placeholders - would require more complex calculations
-        if (uvEditRotation) uvEditRotation.value = "0";
-        if (uvEditScaleX) uvEditScaleX.value = "1";
-        if (uvEditScaleY) uvEditScaleY.value = "1";
-    }
-    
-    // Apply UV transformations from inputs
-    function applyUVTransformation() {
-        if (selectedIslands.length === 0) return;
-        
-        // Get values from inputs
-        const posX = parseFloat(uvEditPosX.value) || 0;
-        const posY = parseFloat(uvEditPosY.value) || 0;
-        const rotation = parseFloat(uvEditRotation.value) || 0;
-        const scaleX = parseFloat(uvEditScaleX.value) || 1;
-        const scaleY = parseFloat(uvEditScaleY.value) || 1;
-        
-        // Apply to all selected islands
-        selectedIslands.forEach(islandId => {
-            const island = uvIslands.find(i => i.id === islandId);
-            if (!island) return;
-            
-            // Calculate center of island
-            const center = {
-                x: (island.uvs[0].x + island.uvs[1].x + island.uvs[2].x) / 3,
-                y: (island.uvs[0].y + island.uvs[1].y + island.uvs[2].y) / 3
-            };
-            
-            // Apply transformations to each UV vertex
-            island.uvs.forEach(uv => {
-                // Translate to origin
-                let x = uv.x - center.x;
-                let y = uv.y - center.y;
-                
-                // Scale
-                x *= scaleX;
-                y *= scaleY;
-                
-                // Rotate (convert degrees to radians)
-                const rad = rotation * Math.PI / 180;
-                const cos = Math.cos(rad);
-                const sin = Math.sin(rad);
-                const nx = x * cos - y * sin;
-                const ny = x * sin + y * cos;
-                x = nx;
-                y = ny;
-                
-                // Translate to new position
-                uv.x = x + posX;
-                uv.y = y + posY;
-            });
-        });
-        
-        // Update display
-        drawUVGrid();
-        drawUVIslands();
-    }
-    
-    // UV Operations
-    
-    // Unwrap UVs - a simple implementation that spreads out islands
-    function unwrapUVs() {
-        // Simple unwrap - spread islands evenly
-        const gridSize = Math.ceil(Math.sqrt(uvIslands.length));
-        const cellSize = 1 / gridSize;
-        
-        uvIslands.forEach((island, index) => {
-            const row = Math.floor(index / gridSize);
-            const col = index % gridSize;
-            
-            // Center point for this grid cell
-            const centerX = col * cellSize + cellSize / 2;
-            const centerY = row * cellSize + cellSize / 2;
-            
-            // Calculate current center of the island
-            const currentCenter = {
-                x: (island.uvs[0].x + island.uvs[1].x + island.uvs[2].x) / 3,
-                y: (island.uvs[0].y + island.uvs[1].y + island.uvs[2].y) / 3
-            };
-            
-            // Move island to new position
-            const deltaX = centerX - currentCenter.x;
-            const deltaY = centerY - currentCenter.y;
-            
-            island.uvs.forEach(uv => {
-                uv.x += deltaX;
-                uv.y += deltaY;
-            });
-        });
-        
-        // Update display
-        drawUVGrid();
-        drawUVIslands();
-        showNotification('UV islands unwrapped', 'success');
-    }
-    
-    // Reset all UVs to default
-    function resetAllUVs() {
-        // In a real implementation, you'd restore original UV coordinates
-        // For this example, we'll just reset to a simple grid layout
-        unwrapUVs();
-        
-        // Clear selection
-        uvIslands.forEach(island => island.selected = false);
-        selectedIslands = [];
-        
-        // Update displays
-        drawUVGrid();
-        drawUVIslands();
-        updateUVTransformInputs();
-        
-        showNotification('UV islands reset', 'info');
-    }
-    
-    // Pack UV islands to use space efficiently
-    function packUVIslands() {
-        // Simple packing - shrink and arrange in grid
-        const padding = 0.02; // Space between islands
-        
-        // First, scale down all islands to use less space
-        uvIslands.forEach(island => {
-            const center = {
-                x: (island.uvs[0].x + island.uvs[1].x + island.uvs[2].x) / 3,
-                y: (island.uvs[0].y + island.uvs[1].y + island.uvs[2].y) / 3
-            };
-            
-            // Scale down by 30%
-            island.uvs.forEach(uv => {
-                uv.x = (uv.x - center.x) * 0.7 + center.x;
-                uv.y = (uv.y - center.y) * 0.7 + center.y;
-            });
-        });
-        
-        // Then arrange them in a grid with the new size
-        const gridSize = Math.ceil(Math.sqrt(uvIslands.length));
-        const cellSize = (1 - padding * (gridSize + 1)) / gridSize;
-        
-        uvIslands.forEach((island, index) => {
-            const row = Math.floor(index / gridSize);
-            const col = index % gridSize;
-            
-            // Center point for this grid cell with padding
-            const centerX = padding + col * (cellSize + padding) + cellSize / 2;
-            const centerY = padding + row * (cellSize + padding) + cellSize / 2;
-            
-            // Calculate current center of the island
-            const currentCenter = {
-                x: (island.uvs[0].x + island.uvs[1].x + island.uvs[2].x) / 3,
-                y: (island.uvs[0].y + island.uvs[1].y + island.uvs[2].y) / 3
-            };
-            
-            // Move island to new position
-            const deltaX = centerX - currentCenter.x;
-            const deltaY = centerY - currentCenter.y;
-            
-            island.uvs.forEach(uv => {
-                uv.x += deltaX;
-                uv.y += deltaY;
-            });
-        });
-        
-        // Update display
-        drawUVGrid();
-        drawUVIslands();
-        showNotification('UV islands packed', 'success');
-    }
-    
-    // Mirror UV islands
-    function mirrorUVIslands(direction) {
-        if (selectedIslands.length === 0) {
-            showNotification('Please select UV islands to mirror', 'warning');
-            return;
-        }
-        
-        selectedIslands.forEach(islandId => {
-            const island = uvIslands.find(i => i.id === islandId);
-            if (!island) return;
-            
-            // Calculate center of island
-            const center = {
-                x: (island.uvs[0].x + island.uvs[1].x + island.uvs[2].x) / 3,
-                y: (island.uvs[0].y + island.uvs[1].y + island.uvs[2].y) / 3
-            };
-            
-            // Apply mirror transformation
-            island.uvs.forEach(uv => {
-                if (direction === 'horizontal') {
-                    uv.x = 2 * center.x - uv.x; // Mirror around vertical line at center.x
-                } else if (direction === 'vertical') {
-                    uv.y = 2 * center.y - uv.y; // Mirror around horizontal line at center.y
-                }
-            });
-        });
-        
-        // Update display
-        drawUVGrid();
-        drawUVIslands();
-        showNotification(`UV islands mirrored ${direction}ly`, 'success');
-    }
-    
-    // Apply UV changes (in real implementation, this would update the model's UVs)
-    function applyUVChanges() {
-        // In a full implementation, you would apply the UV changes to the model
-        // For this demo, we'll just show a notification
-        showNotification('UV changes applied', 'success');
-        
-        // Update the 3D model texture
-        createModel();
-    }
-    
-    // Cancel UV changes
-    function cancelUVChanges() {
-        // Reset UVs and clear selection
-        resetAllUVs();
-        showNotification('UV changes canceled', 'info');
-    }
-    
-    // Animate UV preview
-    function animateUVPreview() {
-        if (!uvPreviewRenderer || !uvPreviewScene || !uvPreviewCamera) return;
-        
-        requestAnimationFrame(animateUVPreview);
-        
-        if (uvPreviewModel) {
-            // Gentle rotation for the preview
-            uvPreviewModel.rotation.y += 0.01;
-        }
-        
-        uvPreviewRenderer.render(uvPreviewScene, uvPreviewCamera);
-    }
-    
-    // Setup HDRI environment
-    function setupHDRIEnvironment() {
-        // Create a simple equirectangular HDRI texture
-        const size = 1024;
-        const halfSize = size / 2;
-        
-        // Create gradient canvas for fake HDRI
-        const canvas = document.createElement('canvas');
-        canvas.width = size;
-        canvas.height = size / 2;
-        const ctx = canvas.getContext('2d');
-        
-        // Create sky gradient (top to middle)
-        const skyGradient = ctx.createLinearGradient(0, 0, 0, halfSize);
-        skyGradient.addColorStop(0, '#0077ff'); // Top sky
-        skyGradient.addColorStop(1, '#88bbff'); // Horizon
-        
-        // Draw sky
-        ctx.fillStyle = skyGradient;
-        ctx.fillRect(0, 0, size, halfSize);
-        
-        // Create ground gradient (middle to bottom)
-        const groundGradient = ctx.createLinearGradient(0, halfSize, 0, canvas.height);
-        groundGradient.addColorStop(0, '#667766'); // Horizon ground
-        groundGradient.addColorStop(1, '#445544'); // Bottom ground
-        
-        // Draw ground
-        ctx.fillStyle = groundGradient;
-        ctx.fillRect(0, halfSize, size, halfSize);
-        
-        // Add sun
-        ctx.fillStyle = 'rgba(255, 255, 220, 0.8)';
-        ctx.beginPath();
-        ctx.arc(size * 0.75, halfSize * 0.4, 60, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Create texture from canvas
-        const texture = new THREE.CanvasTexture(canvas);
-        texture.mapping = THREE.EquirectangularReflectionMapping;
-        
-        // Generate environment map
-        envMap = pmremGenerator.fromEquirectangular(texture).texture;
-        
-        // Clean up
-        texture.dispose();
-        pmremGenerator.dispose();
-        
-        return envMap;
-    }
-    
-    // Toggle HDRI Lighting
-    function toggleHDRILighting(enabled) {
-        useHDRI = enabled;
-        
-        if (enabled) {
-            if (!envMap) {
-                envMap = setupHDRIEnvironment();
-            }
-            
-            scene.environment = envMap;
-            scene.background = envMap;
-            
-            // Hide directional light
-            light.visible = false;
-        } else {
-            scene.environment = null;
-            scene.background = new THREE.Color(0x0d1117);
-            
-            // Show directional light
-            light.visible = true;
-        }
-        
-        // Update model material
-        if (currentModel && currentModel.material) {
-            currentModel.material.envMap = useHDRI ? envMap : null;
-            currentModel.material.needsUpdate = true;
-        }
-    }
-    
-    // Create or update the 3D model with textures
-    function createModel() {
-        // Remove existing model if it exists
-        if (currentModel) {
-            scene.remove(currentModel);
-        }
-        
-        // Create sphere geometry
+        // Create geometry with higher segment count for better displacement
         const geometry = new THREE.SphereGeometry(1, 64, 64);
         
         // Create material
         const material = new THREE.MeshStandardMaterial({
             color: 0xffffff,
             roughness: parseFloat(roughnessStrength.value),
-            metalness: parseFloat(metalness.value),
-            envMapIntensity: 1.0
+            metalness: parseFloat(metalness.value)
         });
     
         // Make sure all textures are updated
@@ -1243,7 +317,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (roughnessTexture) roughnessTexture.needsUpdate = true;
         if (displacementTexture) displacementTexture.needsUpdate = true;
         if (aoTexture) aoTexture.needsUpdate = true;
-        if (emissionTexture) emissionTexture.needsUpdate = true;
     
         // Apply textures
         material.map = baseTexture;
@@ -1251,13 +324,6 @@ document.addEventListener('DOMContentLoaded', function() {
         material.roughnessMap = roughnessTexture;
         material.displacementMap = displacementTexture;
         material.aoMap = aoTexture;
-        material.emissiveMap = emissionTexture;
-        
-        // If emission map is applied, set emissive color and intensity
-        if (emissionTexture) {
-            material.emissive = new THREE.Color(0xffffff);
-            material.emissiveIntensity = parseFloat(emissionStrength.value);
-        }
         
         // Update material parameters
         if (normalTexture) {
@@ -1270,70 +336,41 @@ document.addEventListener('DOMContentLoaded', function() {
         if (displacementTexture) {
             material.displacementScale = parseFloat(displacementStrength.value);
         }
-        
-        // Apply UV modifications
-        const repeatX = parseInt(uvRepeatX.value) || 1;
-        const repeatY = parseInt(uvRepeatY.value) || 1;
-        const offsetX = parseFloat(uvOffsetX.value) || 0;
-        const offsetY = parseFloat(uvOffsetY.value) || 0;
-        const rotation = parseFloat(uvRotation.value) || 0;
-        const scale = parseFloat(uvScale.value) || 1;
-        
-        if (material.map) {
-            material.map.wrapS = material.map.wrapT = THREE.RepeatWrapping;
-            material.map.repeat.set(repeatX, repeatY);
-            material.map.offset.set(offsetX, offsetY);
-            material.map.rotation = rotation * Math.PI / 180; // Convert degrees to radians
-            material.map.center.set(0.5, 0.5); // Set rotation center
-        }
-        
-        // Apply to all other maps
-        const maps = [
-            'normalMap', 'roughnessMap', 'displacementMap', 
-            'aoMap', 'emissiveMap'
-        ];
-        
-        maps.forEach(mapName => {
-            if (material[mapName]) {
-                material[mapName].wrapS = material[mapName].wrapT = THREE.RepeatWrapping;
-                material[mapName].repeat.set(repeatX, repeatY);
-                material[mapName].offset.set(offsetX, offsetY);
-                material[mapName].rotation = rotation * Math.PI / 180;
-                material[mapName].center.set(0.5, 0.5); // Set rotation center
-            }
-        });
     
         // Ensure material knows it needs updating
         material.needsUpdate = true;
     
         // Create mesh
-        currentModel = new THREE.Mesh(geometry, material);
+        sphere = new THREE.Mesh(geometry, material);
         
         // Set up UV2 coordinates for AO map
         geometry.setAttribute('uv2', geometry.attributes.uv);
         
-        scene.add(currentModel);
+        scene.add(sphere);
         
-        // Apply HDRI if enabled
-        if (useHDRI) {
-            toggleHDRILighting(true);
-        }
+        console.log("Sphere created with textures:", {
+            base: !!material.map,
+            normal: !!material.normalMap,
+            roughness: !!material.roughnessMap,
+            displacement: !!material.displacementMap,
+            ao: !!material.aoMap
+        });
     }
     
     // Animation loop
     function animate() {
         animationFrameId = requestAnimationFrame(animate);
         
-        // Add automatic or manual rotation to the model
-        if (currentModel) {
+        // Add automatic or manual rotation to the sphere
+        if (sphere) {
             if (autoRotate) {
-                currentModel.rotation.y += rotationSpeed.y;
-                currentModel.rotation.x += rotationSpeed.x;
+                sphere.rotation.y += rotationSpeed.y;
+                sphere.rotation.x += rotationSpeed.x;
                 
                 // Update sliders to match current rotation
                 if (!isDraggingSlider) {
-                    rotationX.value = ((currentModel.rotation.x % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
-                    rotationY.value = ((currentModel.rotation.y % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
+                    rotationX.value = ((sphere.rotation.x % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
+                    rotationY.value = ((sphere.rotation.y % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
                 }
             }
         }
@@ -1350,23 +387,6 @@ document.addEventListener('DOMContentLoaded', function() {
             camera.updateProjectionMatrix();
             renderer.setSize(modelContainer.clientWidth, modelContainer.clientHeight);
         }
-        
-        // Resize UV canvas if active
-        if (uvCanvas && uvContext) {
-            resizeUVCanvas();
-            drawUVGrid();
-            drawUVIslands();
-        }
-        
-        // Resize UV preview if active
-        if (uvPreviewCamera && uvPreviewRenderer && uvModelContainer) {
-            uvPreviewCamera.aspect = uvModelContainer.clientWidth / uvModelContainer.clientHeight;
-            uvPreviewCamera.updateProjectionMatrix();
-            uvPreviewRenderer.setSize(uvModelContainer.clientWidth, uvModelContainer.clientHeight);
-        }
-        
-        // Resize seamless preview if active
-        updateSeamlessPreview();
     }
     
     // Set up event listeners
@@ -1418,94 +438,37 @@ document.addEventListener('DOMContentLoaded', function() {
             clearImage();
         });
         
-        // Texture Sliders
+        // Sliders
         baseStrength.addEventListener('input', updateTextures);
         normalStrength.addEventListener('input', updateTextures);
         roughnessStrength.addEventListener('input', updateTextures);
         displacementStrength.addEventListener('input', updateTextures);
         aoStrength.addEventListener('input', updateTextures);
         metalness.addEventListener('input', updateMaterial);
-        emissionStrength.addEventListener('input', updateMaterial);
-        
-        // UV Projection controls
-        uvRepeatX.addEventListener('input', updateUVProjection);
-        uvRepeatY.addEventListener('input', updateUVProjection);
-        uvOffsetX.addEventListener('input', updateUVProjection);
-        uvOffsetY.addEventListener('input', updateUVProjection);
-        uvRotation.addEventListener('input', updateUVProjection);
-        uvScale.addEventListener('input', updateUVProjection);
-        
-        // AO Radius
-        if (aoRadius) {
-            aoRadius.addEventListener('input', () => {
-                if (aoRadiusValue) {
-                    aoRadiusValue.textContent = aoRadius.value;
-                }
-                
-                // Regenerate AO map with new radius
-                if (originalImageData) {
-                    generateAOMap(originalImageData);
-                    createModel();
-                }
-            });
-        }
-        
-        // Seamless controls
-        if (toggleSeamlessBtn) {
-            toggleSeamlessBtn.addEventListener('click', toggleSeamlessMode);
-        }
-        
-        if (seamlessStrength) {
-            seamlessStrength.addEventListener('input', () => {
-                if (seamlessStrengthValue) {
-                    seamlessStrengthValue.textContent = parseFloat(seamlessStrength.value).toFixed(2);
-                }
-                updateSeamlessPreview();
-            });
-        }
-        
-        if (seamlessMethod) {
-            seamlessMethod.addEventListener('change', updateSeamlessPreview);
-        }
-        
-        if (seamlessTiles) {
-            seamlessTiles.addEventListener('input', () => {
-                const tiles = parseInt(seamlessTiles.value);
-                if (seamlessTilesValue) {
-                    seamlessTilesValue.textContent = `${tiles}×${tiles}`;
-                }
-                updateSeamlessPreview();
-            });
-        }
-        
-        // Normal algorithm selection
-        if (normalAlgorithmSelect) {
-            normalAlgorithmSelect.addEventListener('change', () => {
-                // Regenerate normal map with new algorithm
-                if (originalImageData) {
-                    generateNormalMap(originalImageData);
-                    createModel();
-                }
-            });
-        }
-        
-        // HDRI toggle
-        useHDRIToggle.addEventListener('change', (e) => {
-            toggleHDRILighting(e.target.checked);
-        });
         
         // Light position
         lightX.addEventListener('input', updateLightPosition);
         lightY.addEventListener('input', updateLightPosition);
         lightZ.addEventListener('input', updateLightPosition);
         
-        // Download buttons
-        downloadBase.addEventListener('click', () => downloadTexture(baseCanvas, 'basecolor-map'));
-        downloadNormal.addEventListener('click', () => downloadTexture(normalCanvas, 'normal-map'));
-        downloadRoughness.addEventListener('click', () => downloadTexture(roughnessCanvas, 'roughness-map'));
-        downloadDisplacement.addEventListener('click', () => downloadTexture(displacementCanvas, 'displacement-map'));
-        downloadAO.addEventListener('click', () => downloadTexture(aoCanvas, 'ao-map'));
-        downloadEmission.addEventListener('click', () => downloadTexture(emissionCanvas, 'emission-map'));
+        // Material presets
+        presetButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const preset = button.dataset.preset;
+                applyMaterialPreset(preset);
+                
+                // Update active button UI
+                presetButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+            });
+        });
+        
+        // Download buttons with format selection
+        downloadBase.addEventListener('click', () => downloadTexture(baseCanvas, 'basecolor-map', baseFormat.value));
+        downloadNormal.addEventListener('click', () => downloadTexture(normalCanvas, 'normal-map', normalFormat.value));
+        downloadRoughness.addEventListener('click', () => downloadTexture(roughnessCanvas, 'roughness-map', roughnessFormat.value));
+        downloadDisplacement.addEventListener('click', () => downloadTexture(displacementCanvas, 'displacement-map', displacementFormat.value));
+        downloadAO.addEventListener('click', () => downloadTexture(aoCanvas, 'ao-map', aoFormat.value));
         
         // Export ZIP
         exportZip.addEventListener('click', exportAllMapsAsZip);
@@ -1544,357 +507,51 @@ document.addEventListener('DOMContentLoaded', function() {
                 }, { once: true });
             });
         });
-        
-        // Keyboard shortcuts
-        document.addEventListener('keydown', handleKeyboardShortcuts);
     }
     
-    // Toggle seamless mode
-    function toggleSeamlessMode() {
-        if (!hasUploadedImage) {
-            showNotification('Please upload a texture first', 'warning');
+    // Apply material preset
+    function applyMaterialPreset(preset) {
+        if (!materialPresets[preset]) {
+            console.error(`Preset ${preset} not found`);
             return;
         }
         
-        seamlessModeActive = !seamlessModeActive;
+        const settings = materialPresets[preset];
         
-        if (seamlessPanel) {
-            if (seamlessModeActive) {
-                seamlessPanel.style.display = 'block';
-                seamlessPanel.classList.add('active');
-                toggleSeamlessBtn.textContent = 'Disable Seamless Mode';
-                updateSeamlessPreview();
-            } else {
-                seamlessPanel.style.display = 'none';
-                seamlessPanel.classList.remove('active');
-                toggleSeamlessBtn.textContent = 'Enable Seamless Mode';
-                
-                // If we already have a seamless texture, use it for the maps
-                if (seamlessImageData) {
-                    applySeamlessTextureToMaps();
-                }
-            }
-        }
-    }
-    
-    // Update the seamless preview
-    function updateSeamlessPreview() {
-        if (!seamlessPreviewCanvas || !hasUploadedImage || !originalImageData) return;
+        // Update slider values
+        normalStrength.value = settings.normalStrength;
+        roughnessStrength.value = settings.roughnessStrength;
+        displacementStrength.value = settings.displacementStrength;
+        aoStrength.value = settings.aoStrength;
+        metalness.value = settings.metalness;
         
-        const ctx = seamlessPreviewCanvas.getContext('2d');
-        
-        // Get the preview container size
-        const container = seamlessPreviewCanvas.parentElement;
-        if (!container) return;
-        
-        // Set canvas size to container
-        seamlessPreviewCanvas.width = container.clientWidth;
-        seamlessPreviewCanvas.height = container.clientHeight;
-        
-        // Create temporary canvas for seamless processing
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = originalImageData.width;
-        tempCanvas.height = originalImageData.height;
-        const tempCtx = tempCanvas.getContext('2d');
-        
-        // Generate seamless texture
-        const method = seamlessMethod.value || 'mirror';
-        const strength = parseFloat(seamlessStrength.value) || 0.5;
-        
-        // Create a new seamless texture
-        tempCtx.putImageData(originalImageData, 0, 0);
-        
-        // Apply seamless algorithm
-        const seamlessResult = createSeamlessTexture(originalImageData, method, strength);
-        tempCtx.putImageData(seamlessResult, 0, 0);
-        
-        // Draw the seamless texture tiled
-        const tiles = parseInt(seamlessTiles.value) || 2;
-        const tileSize = Math.min(seamlessPreviewCanvas.width, seamlessPreviewCanvas.height) / tiles;
-        
-        ctx.clearRect(0, 0, seamlessPreviewCanvas.width, seamlessPreviewCanvas.height);
-        
-        // Draw checkerboard background
-        ctx.fillStyle = '#252525';
-        for (let y = 0; y < tiles; y++) {
-            for (let x = 0; x < tiles; x++) {
-                if ((x + y) % 2 === 0) {
-                    ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
-                }
-            }
-        }
-        
-        // Draw the tiles
-        for (let y = 0; y < tiles; y++) {
-            for (let x = 0; x < tiles; x++) {
-                ctx.drawImage(
-                    tempCanvas,
-                    x * tileSize,
-                    y * tileSize,
-                    tileSize,
-                    tileSize
-                );
-            }
-        }
-        
-        // Draw grid
-        ctx.strokeStyle = 'rgba(60, 158, 255, 0.7)';
-        ctx.lineWidth = 1;
-        
-        for (let i = 1; i < tiles; i++) {
-            // Vertical line
-            ctx.beginPath();
-            ctx.moveTo(i * tileSize, 0);
-            ctx.lineTo(i * tileSize, seamlessPreviewCanvas.height);
-            ctx.stroke();
-            
-            // Horizontal line
-            ctx.beginPath();
-            ctx.moveTo(0, i * tileSize);
-            ctx.lineTo(seamlessPreviewCanvas.width, i * tileSize);
-            ctx.stroke();
-        }
-        
-        // Store the processed seamless image data
-        seamlessImageData = seamlessResult;
-        
-        // Automatically apply seamless texture to maps
-        applySeamlessTextureToMaps();
-    }
-    
-    // Apply the seamless texture to all maps
-    function applySeamlessTextureToMaps() {
-        if (!seamlessImageData) return;
-        
-        // Create a temporary image from the seamless data
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = seamlessImageData.width;
-        tempCanvas.height = seamlessImageData.height;
-        const tempCtx = tempCanvas.getContext('2d');
-        tempCtx.putImageData(seamlessImageData, 0, 0);
-        
-        const img = new Image();
-        img.onload = function() {
-            // Generate new maps with the seamless texture
-            generateBaseMap(img);
-            generateNormalMap(seamlessImageData);
-            generateRoughnessMap(seamlessImageData);
-            generateDisplacementMap(seamlessImageData);
-            generateAOMap(seamlessImageData);
-            generateEmissionMap(seamlessImageData);
-            
-            // Update 3D model
-            createModel();
-        };
-        img.src = tempCanvas.toDataURL();
-    }
-    
-    // Create seamless texture from image data
-    function createSeamlessTexture(imageData, method, strength) {
-        const width = imageData.width;
-        const height = imageData.height;
-        
-        // Create output canvas
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        
-        // Draw original image
-        ctx.putImageData(imageData, 0, 0);
-        
-        // Get the blending pixels size based on strength
-        const blendSize = Math.max(10, Math.floor(Math.min(width, height) * strength * 0.2));
-        
-        // Apply different methods
-        switch (method) {
-            case 'mirror':
-                // Mirror edges method
-                ctx.save();
-                
-                // Mirror left edge to right
-                ctx.translate(width, 0);
-                ctx.scale(-1, 1);
-                ctx.drawImage(canvas, 0, 0, blendSize, height, 0, 0, blendSize, height);
-                ctx.restore();
-                
-                ctx.save();
-                // Mirror right edge to left
-                ctx.drawImage(canvas, width - blendSize, 0, blendSize, height, 0, 0, blendSize, height);
-                ctx.restore();
-                
-                ctx.save();
-                // Mirror top edge to bottom
-                ctx.translate(0, height);
-                ctx.scale(1, -1);
-                ctx.drawImage(canvas, 0, 0, width, blendSize, 0, 0, width, blendSize);
-                ctx.restore();
-                
-                ctx.save();
-                // Mirror bottom edge to top
-                ctx.drawImage(canvas, 0, height - blendSize, width, blendSize, 0, 0, width, blendSize);
-                ctx.restore();
-                break;
-                
-            case 'wrap':
-                // Wrap around method
-                ctx.save();
-                // Wrap right to left
-                ctx.drawImage(canvas, width - blendSize, 0, blendSize, height, 0, 0, blendSize, height);
-                // Wrap left to right
-                ctx.drawImage(canvas, 0, 0, blendSize, height, width - blendSize, 0, blendSize, height);
-                // Wrap bottom to top
-                ctx.drawImage(canvas, 0, height - blendSize, width, blendSize, 0, 0, width, blendSize);
-                // Wrap top to bottom
-                ctx.drawImage(canvas, 0, 0, width, blendSize, 0, height - blendSize, width, blendSize);
-                ctx.restore();
-                break;
-                
-            case 'blend':
-            default:
-                // Edge blend method - use gradient alpha blending
-                ctx.save();
-                
-                // Create gradients for blending
-                const leftGradient = ctx.createLinearGradient(0, 0, blendSize, 0);
-                leftGradient.addColorStop(0, 'rgba(0,0,0,1)');
-                leftGradient.addColorStop(1, 'rgba(0,0,0,0)');
-                
-                const rightGradient = ctx.createLinearGradient(width - blendSize, 0, width, 0);
-                rightGradient.addColorStop(0, 'rgba(0,0,0,0)');
-                rightGradient.addColorStop(1, 'rgba(0,0,0,1)');
-                
-                const topGradient = ctx.createLinearGradient(0, 0, 0, blendSize);
-                topGradient.addColorStop(0, 'rgba(0,0,0,1)');
-                topGradient.addColorStop(1, 'rgba(0,0,0,0)');
-                
-                const bottomGradient = ctx.createLinearGradient(0, height - blendSize, 0, height);
-                bottomGradient.addColorStop(0, 'rgba(0,0,0,0)');
-                bottomGradient.addColorStop(1, 'rgba(0,0,0,1)');
-                
-                // Blend left and right edges
-                ctx.globalCompositeOperation = 'destination-out';
-                
-                ctx.fillStyle = leftGradient;
-                ctx.fillRect(0, 0, blendSize, height);
-                
-                ctx.fillStyle = rightGradient;
-                ctx.fillRect(width - blendSize, 0, blendSize, height);
-                
-                // Blend top and bottom edges
-                ctx.fillStyle = topGradient;
-                ctx.fillRect(0, 0, width, blendSize);
-                
-                ctx.fillStyle = bottomGradient;
-                ctx.fillRect(0, height - blendSize, width, blendSize);
-                
-                // Now copy from opposite sides with normal blending
-                ctx.globalCompositeOperation = 'source-over';
-                
-                // Copy right edge to left with opacity
-                ctx.drawImage(canvas, width - blendSize * 2, 0, blendSize * 2, height, -blendSize, 0, blendSize * 2, height);
-                
-                // Copy left edge to right with opacity
-                ctx.drawImage(canvas, 0, 0, blendSize * 2, height, width - blendSize, 0, blendSize * 2, height);
-                
-                // Copy bottom edge to top with opacity
-                ctx.drawImage(canvas, 0, height - blendSize * 2, width, blendSize * 2, 0, -blendSize, width, blendSize * 2);
-                
-                // Copy top edge to bottom with opacity
-                ctx.drawImage(canvas, 0, 0, width, blendSize * 2, 0, height - blendSize, width, blendSize * 2);
-                
-                ctx.restore();
-                break;
-        }
-        
-        // Get the processed image data
-        return ctx.getImageData(0, 0, width, height);
-    }
-    
-    // Handle keyboard shortcuts
-    function handleKeyboardShortcuts(e) {
-        // Ignore shortcuts when in input fields
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-        
-        switch (e.key) {
-            case ' ': // Spacebar - toggle auto-rotate
-                toggleAutoRotation();
-                e.preventDefault();
-                break;
-                
-            case 'e': // Export ZIP
-            case 'E':
-                exportAllMapsAsZip();
-                break;
-                
-            case 'c': // Export Three.js Code
-            case 'C':
-                exportThreejsCode();
-                break;
-                
-            case 't': // Toggle Seamless
-            case 'T':
-                if (toggleSeamlessBtn) toggleSeamlessMode();
-                break;
-                
-            case 'h': // Toggle HDRI
-            case 'H':
-                if (useHDRIToggle) {
-                    useHDRIToggle.checked = !useHDRIToggle.checked;
-                    toggleHDRILighting(useHDRIToggle.checked);
-                }
-                break;
-                
-            case 'Escape': // Close modals or panels
-                if (seamlessPanel && seamlessModeActive) {
-                    toggleSeamlessMode();
-                }
-                break;
-                
-            case 'ArrowLeft': // Rotate Y axis left
-                if (currentModel) {
-                    currentModel.rotation.y -= 0.1;
-                    rotationY.value = currentModel.rotation.y;
-                }
-                break;
-                
-            case 'ArrowRight': // Rotate Y axis right
-                if (currentModel) {
-                    currentModel.rotation.y += 0.1;
-                    rotationY.value = currentModel.rotation.y;
-                }
-                break;
-                
-            case 'ArrowUp': // Rotate X axis up
-                if (currentModel) {
-                    currentModel.rotation.x -= 0.1;
-                    rotationX.value = currentModel.rotation.x;
-                }
-                break;
-                
-            case 'ArrowDown': // Rotate X axis down
-                if (currentModel) {
-                    currentModel.rotation.x += 0.1;
-                    rotationX.value = currentModel.rotation.x;
-                }
-                break;
-        }
-    }
-    
-    // Update UV projection properties
-    function updateUVProjection() {
         // Update display values
-        if (uvRepeatXValue) uvRepeatXValue.textContent = uvRepeatX.value;
-        if (uvRepeatYValue) uvRepeatYValue.textContent = uvRepeatY.value;
-        if (uvOffsetXValue) uvOffsetXValue.textContent = parseFloat(uvOffsetX.value).toFixed(2);
-        if (uvOffsetYValue) uvOffsetYValue.textContent = parseFloat(uvOffsetY.value).toFixed(2);
-        if (uvRotationValue) uvRotationValue.textContent = `${uvRotation.value}°`;
-        if (uvScaleValue) uvScaleValue.textContent = parseFloat(uvScale.value).toFixed(1);
+        normalValue.textContent = settings.normalStrength.toFixed(1);
+        roughnessValue.textContent = settings.roughnessStrength.toFixed(1);
+        displacementValue.textContent = settings.displacementStrength.toFixed(1);
+        aoValue.textContent = settings.aoStrength.toFixed(1);
+        metalnessValue.textContent = settings.metalness.toFixed(1);
         
-        // Update model with new UV settings
-        if (hasUploadedImage) {
-            createModel();
+        // Update material
+        if (sphere && sphere.material) {
+            if (sphere.material.normalMap) {
+                sphere.material.normalScale.set(settings.normalStrength, settings.normalStrength);
+            }
+            
+            if (sphere.material.displacementMap) {
+                sphere.material.displacementScale = settings.displacementStrength;
+            }
+            
+            sphere.material.roughness = settings.roughnessStrength;
+            sphere.material.metalness = settings.metalness;
+            sphere.material.needsUpdate = true;
         }
+        
+        // Save active preset
+        activePreset = preset;
+        
+        // Show notification
+        showNotification(`Applied ${preset.charAt(0).toUpperCase() + preset.slice(1)} material preset`, 'success');
     }
     
     // Clear the uploaded image
@@ -1904,15 +561,14 @@ document.addEventListener('DOMContentLoaded', function() {
         uploadedImage.src = '';
         hasUploadedImage = false;
         
-        // Remove textures from model
-        if (currentModel && currentModel.material) {
-            currentModel.material.map = null;
-            currentModel.material.normalMap = null;
-            currentModel.material.roughnessMap = null;
-            currentModel.material.displacementMap = null;
-            currentModel.material.aoMap = null;
-            currentModel.material.emissiveMap = null;
-            currentModel.material.needsUpdate = true;
+        // Remove textures from sphere
+        if (sphere && sphere.material) {
+            sphere.material.map = null;
+            sphere.material.normalMap = null;
+            sphere.material.roughnessMap = null;
+            sphere.material.displacementMap = null;
+            sphere.material.aoMap = null;
+            sphere.material.needsUpdate = true;
         }
         
         // Clear canvases
@@ -1921,7 +577,6 @@ document.addEventListener('DOMContentLoaded', function() {
         clearCanvas(roughnessCanvas);
         clearCanvas(displacementCanvas);
         clearCanvas(aoCanvas);
-        clearCanvas(emissionCanvas);
         
         // Reset textures
         baseTexture = null;
@@ -1929,21 +584,13 @@ document.addEventListener('DOMContentLoaded', function() {
         roughnessTexture = null;
         displacementTexture = null;
         aoTexture = null;
-        emissionTexture = null;
         originalImageData = null;
-        seamlessImageData = null;
-        
-        // Reset seamless mode if active
-        if (seamlessModeActive) {
-            toggleSeamlessMode();
-        }
         
         showNotification('Image removed', 'info');
     }
     
     // Clear a canvas
     function clearCanvas(canvas) {
-        if (!canvas) return;
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
@@ -1964,15 +611,16 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Show loading state
-        showLoadingIndicator('Reading image file...', 10);
+        // Show loading state with random message
+        const initialMessage = getRandomLoadingMessage();
+        showLoadingIndicator(initialMessage, 10);
         
         const reader = new FileReader();
         
         reader.onload = function(e) {
             try {
                 updateProgress(30);
-                updateLoadingMessage('Processing image...');
+                updateLoadingMessage(getRandomLoadingMessage());
                 
                 // Display the image
                 uploadedImage.src = e.target.result;
@@ -1984,22 +632,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 img.onload = function() {
                     try {
                         updateProgress(50);
-                        updateLoadingMessage('Analyzing texture...');
+                        updateLoadingMessage(getRandomLoadingMessage());
                         
                         // Store original image data
                         originalImageData = getImageData(img);
                         
                         updateProgress(60);
-                        updateLoadingMessage('Generating texture maps...');
+                        updateLoadingMessage(getRandomLoadingMessage());
                         
                         // Generate texture maps
                         generateTextureMaps(img);
                         
                         updateProgress(90);
-                        updateLoadingMessage('Applying to 3D model...');
+                        updateLoadingMessage("Applying to 3D model... Almost there!");
                         
-                        // Recreate the model to apply textures
-                        createModel();
+                        // Recreate the sphere to apply textures
+                        createSphere();
                         
                         // Remove loading state
                         setTimeout(() => {
@@ -2024,6 +672,11 @@ document.addEventListener('DOMContentLoaded', function() {
         };
         
         reader.readAsDataURL(file);
+    }
+    
+    // Get a random loading message
+    function getRandomLoadingMessage() {
+        return loadingMessages[Math.floor(Math.random() * loadingMessages.length)];
     }
     
     // Handle processing error
@@ -2141,14 +794,11 @@ document.addEventListener('DOMContentLoaded', function() {
         // Generate roughness map
         generateRoughnessMap(originalImageData);
         
-        // Generate displacement map 
+        // Generate displacement map
         generateDisplacementMap(originalImageData);
         
         // Generate ambient occlusion map
         generateAOMap(originalImageData);
-        
-        // Generate emission map
-        generateEmissionMap(originalImageData);
     }
     
     // Generate base color map (formerly diffuse)
@@ -2160,20 +810,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // Draw the image
         const ctx = baseCanvas.getContext('2d');
         ctx.drawImage(img, 0, 0);
-        
-        // Apply base strength as a multiplier
-        if (parseFloat(baseStrength.value) !== 1.0) {
-            const imageData = ctx.getImageData(0, 0, baseCanvas.width, baseCanvas.height);
-            const strength = parseFloat(baseStrength.value);
-            
-            for (let i = 0; i < imageData.data.length; i += 4) {
-                imageData.data[i] = Math.min(255, imageData.data[i] * strength);
-                imageData.data[i + 1] = Math.min(255, imageData.data[i + 1] * strength);
-                imageData.data[i + 2] = Math.min(255, imageData.data[i + 2] * strength);
-            }
-            
-            ctx.putImageData(imageData, 0, 0);
-        }
         
         // Create base color texture
         baseTexture = new THREE.Texture(baseCanvas);
@@ -2194,57 +830,23 @@ document.addEventListener('DOMContentLoaded', function() {
         const ctx = normalCanvas.getContext('2d');
         const outputData = ctx.createImageData(imageData.width, imageData.height);
         
-        // Get selected algorithm
-        const algorithm = normalAlgorithmSelect ? normalAlgorithmSelect.value : 'sobel';
-        const strength = parseFloat(normalStrength.value);
+        // Sobel operators for edge detection
+        const sobelX = [
+            -1, 0, 1,
+            -2, 0, 2,
+            -1, 0, 1
+        ];
         
-        // Different kernel operators
-        const operators = {
-            sobel: {
-                x: [
-                    -1, 0, 1,
-                    -2, 0, 2,
-                    -1, 0, 1
-                ],
-                y: [
-                    -1, -2, -1,
-                     0,  0,  0,
-                     1,  2,  1
-                ]
-            },
-            prewitt: {
-                x: [
-                    -1, 0, 1,
-                    -1, 0, 1,
-                    -1, 0, 1
-                ],
-                y: [
-                    -1, -1, -1,
-                     0,  0,  0,
-                     1,  1,  1
-                ]
-            },
-            enhanced: {
-                x: [
-                    -3, 0, 3,
-                    -10, 0, 10,
-                    -3, 0, 3
-                ],
-                y: [
-                    -3, -10, -3,
-                     0,   0,  0,
-                     3,  10,  3
-                ]
-            }
-        };
-        
-        // Use the selected operator or default to sobel
-        const operator = operators[algorithm] || operators.sobel;
+        const sobelY = [
+            -1, -2, -1,
+            0, 0, 0,
+            1, 2, 1
+        ];
         
         // Process each pixel to create normal map
         for (let y = 0; y < imageData.height; y++) {
             for (let x = 0; x < imageData.width; x++) {
-                // Calculate gradient using the selected operator
+                // Calculate gradient using Sobel operators
                 let gx = 0;
                 let gy = 0;
                 
@@ -2257,13 +859,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         // Use grayscale value (average of RGB)
                         const val = (imageData.data[idx] + imageData.data[idx + 1] + imageData.data[idx + 2]) / 3;
                         
-                        gx += val * operator.x[(ky + 1) * 3 + (kx + 1)];
-                        gy += val * operator.y[(ky + 1) * 3 + (kx + 1)];
+                        gx += val * sobelX[(ky + 1) * 3 + (kx + 1)];
+                        gy += val * sobelY[(ky + 1) * 3 + (kx + 1)];
                     }
                 }
                 
                 // Convert gradient to normal vector
-                const scale = 3.0 * strength; // Apply strength parameter
+                const scale = 3.0; // Increased scale for stronger normal effect
                 const nx = -gx * scale;
                 const ny = -gy * scale;
                 const nz = 200; // Higher Z value for more pronounced effect
@@ -2335,9 +937,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Brighter areas tend to be smoother
                 roughness = roughness * 0.6 + (255 - brightness) / 255 * 0.4;
                 
-                // Apply strength parameter
-                roughness *= parseFloat(roughnessStrength.value) * 2;
-                
                 // Ensure roughness is between 0 and 1
                 roughness = Math.min(1.0, Math.max(0.0, roughness));
                 
@@ -2382,10 +981,6 @@ document.addEventListener('DOMContentLoaded', function() {
             // Enhance contrast
             brightness = Math.max(0, Math.min(255, (brightness - 128) * 1.2 + 128));
             
-            // Apply strength parameter
-            const strength = parseFloat(displacementStrength.value) * 2;
-            brightness = Math.min(255, Math.max(0, brightness * strength));
-            
             outputData.data[i] = brightness;
             outputData.data[i + 1] = brightness;
             outputData.data[i + 2] = brightness;
@@ -2411,9 +1006,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const ctx = aoCanvas.getContext('2d');
         const outputData = ctx.createImageData(imageData.width, imageData.height);
         
-        // Get the AO sampling radius
-        const samplingRadius = aoRadius ? parseInt(aoRadius.value) : 5;
-        
         // Generate AO by analyzing edges and shadows in the image
         const tempCanvas = document.createElement('canvas');
         tempCanvas.width = imageData.width;
@@ -2424,7 +1016,7 @@ document.addEventListener('DOMContentLoaded', function() {
         tempCtx.putImageData(imageData, 0, 0);
         
         // First blur the image slightly
-        tempCtx.filter = `blur(${samplingRadius/2}px)`;
+        tempCtx.filter = 'blur(2px)';
         tempCtx.drawImage(tempCanvas, 0, 0);
         
         // Get the blurred image data
@@ -2442,9 +1034,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 let sumGradient = 0;
                 let samples = 0;
                 
-                // Sample neighborhood based on radius
-                for (let ky = -samplingRadius; ky <= samplingRadius; ky++) {
-                    for (let kx = -samplingRadius; kx <= samplingRadius; kx++) {
+                // Sample 5x5 neighborhood for broader detection
+                for (let ky = -2; ky <= 2; ky++) {
+                    for (let kx = -2; kx <= 2; kx++) {
                         if (kx === 0 && ky === 0) continue;
                         
                         const px = Math.min(imageData.width - 1, Math.max(0, x + kx));
@@ -2472,8 +1064,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 const originalGray = (imageData.data[idx] + imageData.data[idx + 1] + imageData.data[idx + 2]) / 3;
                 aoValue = aoValue * 0.7 + (255 - originalGray) * 0.3;
                 
-                // Apply strength parameter
-                aoValue = Math.min(255, Math.max(0, aoValue * parseFloat(aoStrength.value) * 2));
+                // Ensure within range and soften effect
+                aoValue = Math.max(0, Math.min(255, aoValue));
+                
+                // Enhance contrast but not too much
+                aoValue = Math.max(100, Math.min(255, (aoValue - 128) * 1.2 + 128));
                 
                 // Set grayscale value
                 outputData.data[idx] = aoValue;
@@ -2493,50 +1088,6 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log("AO map generated");
     }
     
-    // Generate emission map
-    function generateEmissionMap(imageData) {
-        // Set canvas dimensions
-        emissionCanvas.width = imageData.width;
-        emissionCanvas.height = imageData.height;
-        
-        const ctx = emissionCanvas.getContext('2d');
-        const outputData = ctx.createImageData(imageData.width, imageData.height);
-        
-        // Basic emission map - use bright areas of the image
-        for (let i = 0; i < imageData.data.length; i += 4) {
-            const r = imageData.data[i];
-            const g = imageData.data[i + 1];
-            const b = imageData.data[i + 2];
-            
-            // Calculate brightness
-            const brightness = (r + g + b) / 3;
-            
-            // Threshold to determine emissive parts (only very bright areas)
-            const threshold = 210;
-            
-            // Only keep areas above threshold, scale by strength
-            let emissionValue = 0;
-            if (brightness > threshold) {
-                emissionValue = (brightness - threshold) / (255 - threshold) * 255 * parseFloat(emissionStrength.value);
-            }
-            
-            // For emission, we keep the color but scale intensity
-            outputData.data[i] = (r / 255) * emissionValue;
-            outputData.data[i + 1] = (g / 255) * emissionValue;
-            outputData.data[i + 2] = (b / 255) * emissionValue;
-            outputData.data[i + 3] = 255; // Alpha
-        }
-        
-        // Put the processed data back to canvas
-        ctx.putImageData(outputData, 0, 0);
-        
-        // Create emission texture
-        emissionTexture = new THREE.Texture(emissionCanvas);
-        emissionTexture.needsUpdate = true;
-        
-        console.log("Emission map generated");
-    }
-    
     // Update textures based on slider values
     function updateTextures() {
         // Update display values
@@ -2546,48 +1097,26 @@ document.addEventListener('DOMContentLoaded', function() {
         displacementValue.textContent = parseFloat(displacementStrength.value).toFixed(1);
         aoValue.textContent = parseFloat(aoStrength.value).toFixed(1);
         
-        // Regenerate relevant texture maps if we have image data
-        if (originalImageData) {
-            const imgData = seamlessModeActive && seamlessImageData ? seamlessImageData : originalImageData;
-            const img = new Image();
-            img.onload = function() {
-                // Generate maps based on which slider was changed
-                if (baseStrength.value !== '1.0') generateBaseMap(img);
-                generateNormalMap(imgData);
-                generateRoughnessMap(imgData);
-                generateDisplacementMap(imgData);
-                generateAOMap(imgData);
-                
-                // Update model
-                createModel();
-            };
-            
-            // Create a temporary canvas to convert image data to data URL
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = imgData.width;
-            tempCanvas.height = imgData.height;
-            const tempCtx = tempCanvas.getContext('2d');
-            tempCtx.putImageData(imgData, 0, 0);
-            img.src = tempCanvas.toDataURL();
-        }
-        
-        // Check if we need to update the model material
-        if (currentModel && currentModel.material) {
+        // Check if we need to update the sphere material
+        if (sphere && sphere.material) {
             // Update normal map intensity
-            if (currentModel.material.normalMap) {
-                currentModel.material.normalScale.set(
+            if (sphere.material.normalMap) {
+                sphere.material.normalScale.set(
                     parseFloat(normalStrength.value),
                     parseFloat(normalStrength.value)
                 );
             }
             
             // Update displacement map intensity
-            if (currentModel.material.displacementMap) {
-                currentModel.material.displacementScale = parseFloat(displacementStrength.value);
+            if (sphere.material.displacementMap) {
+                sphere.material.displacementScale = parseFloat(displacementStrength.value);
             }
             
             // Make sure material updates
-            currentModel.material.needsUpdate = true;
+            sphere.material.needsUpdate = true;
+        } else {
+            // If sphere doesn't exist, create it
+            createSphere();
         }
     }
     
@@ -2595,26 +1124,10 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateMaterial() {
         // Update display values
         metalnessValue.textContent = parseFloat(metalness.value).toFixed(1);
-        if (emissionValue) {
-            emissionValue.textContent = parseFloat(emissionStrength.value).toFixed(1);
-        }
         
-        if (currentModel && currentModel.material) {
-            currentModel.material.metalness = parseFloat(metalness.value);
-            
-            // Update emission if we have an emission map
-            if (currentModel.material.emissiveMap) {
-                currentModel.material.emissiveIntensity = parseFloat(emissionStrength.value);
-            }
-            
-            currentModel.material.needsUpdate = true;
-        }
-        
-        // Regenerate emission map if emission strength changed
-        if (originalImageData) {
-            const imgData = seamlessModeActive && seamlessImageData ? seamlessImageData : originalImageData;
-            generateEmissionMap(imgData);
-            createModel();
+        if (sphere && sphere.material) {
+            sphere.material.metalness = parseFloat(metalness.value);
+            sphere.material.needsUpdate = true;
         }
     }
     
@@ -2629,28 +1142,39 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Download texture as image
-    function downloadTexture(canvas, filename) {
+    // Download texture as image with selected format
+    function downloadTexture(canvas, filename, format = 'png') {
         if (!hasUploadedImage) {
             showNotification('Please upload a texture first', 'error');
             return;
         }
         
+        // Create a link element for downloading
         const link = document.createElement('a');
         
-        // Get selected format
-        let format = 'png';
-        formatRadios.forEach(radio => {
-            if (radio.checked) {
-                format = radio.value;
-            }
-        });
+        // Generate data URL based on selected format
+        switch (format) {
+            case 'webp':
+                link.href = canvas.toDataURL('image/webp');
+                link.download = `${filename}.webp`;
+                break;
+            case 'jpeg':
+                link.href = canvas.toDataURL('image/jpeg', 0.9); // 0.9 quality
+                link.download = `${filename}.jpg`;
+                break;
+            case 'png':
+            default:
+                link.href = canvas.toDataURL('image/png');
+                link.download = `${filename}.png`;
+                break;
+        }
         
-        link.download = `${filename}.${format}`;
-        link.href = canvas.toDataURL(`image/${format}`);
+        // Trigger the download
         link.click();
         
-        showNotification(`${filename.split('-')[0]} map downloaded`, 'success');
+        // Show success notification
+        const formatNames = { png: 'PNG', webp: 'WebP', jpeg: 'JPEG' };
+        showNotification(`${filename.split('-')[0]} map downloaded as ${formatNames[format]}`, 'success');
     }
     
     // Export all selected maps as a ZIP file
@@ -2668,56 +1192,90 @@ document.addEventListener('DOMContentLoaded', function() {
         const zip = new JSZip();
         const textureBaseName = 'texture';
         let exportCount = 0;
+        const format = exportFormat.value;
+        const formatExt = format === 'webp' ? 'webp' : (format === 'jpeg' ? 'jpg' : 'png');
         
         // Show processing indicator
         showLoadingIndicator('Packaging texture maps...', 10);
         
-        // Get selected export format
-        let format = 'png';
-        let mimeType = 'image/png';
-        
-        formatRadios.forEach(radio => {
-            if (radio.checked) {
-                format = radio.value;
-                mimeType = `image/${format}`;
-            }
-        });
-        
         // Add selected maps to ZIP
         if (exportBase.checked && baseCanvas) {
-            zip.file(`${textureBaseName}_basecolor.${format}`, dataURLToBlob(baseCanvas.toDataURL(mimeType)), {base64: false});
+            let dataURL;
+            if (format === 'webp') {
+                dataURL = baseCanvas.toDataURL('image/webp');
+            } else if (format === 'jpeg') {
+                dataURL = baseCanvas.toDataURL('image/jpeg', 0.9);
+            } else {
+                dataURL = baseCanvas.toDataURL('image/png');
+            }
+            
+            zip.file(`${textureBaseName}_basecolor.${formatExt}`, dataURLToBlob(dataURL), {base64: false});
             exportCount++;
             updateProgress(20);
         }
         
         if (exportNormal.checked && normalCanvas) {
-            zip.file(`${textureBaseName}_normal.${format}`, dataURLToBlob(normalCanvas.toDataURL(mimeType)), {base64: false});
+            // For normal maps, prefer PNG for quality (or WebP if selected)
+            const normalFormat = format === 'jpeg' ? 'png' : format;
+            const normalExt = normalFormat === 'webp' ? 'webp' : 'png';
+            
+            let dataURL;
+            if (normalFormat === 'webp') {
+                dataURL = normalCanvas.toDataURL('image/webp');
+            } else {
+                dataURL = normalCanvas.toDataURL('image/png');
+            }
+            
+            zip.file(`${textureBaseName}_normal.${normalExt}`, dataURLToBlob(dataURL), {base64: false});
             exportCount++;
             updateProgress(40);
         }
         
         if (exportRoughness.checked && roughnessCanvas) {
-            zip.file(`${textureBaseName}_roughness.${format}`, dataURLToBlob(roughnessCanvas.toDataURL(mimeType)), {base64: false});
+            let dataURL;
+            if (format === 'webp') {
+                dataURL = roughnessCanvas.toDataURL('image/webp');
+            } else if (format === 'jpeg') {
+                dataURL = roughnessCanvas.toDataURL('image/jpeg', 0.9);
+            } else {
+                dataURL = roughnessCanvas.toDataURL('image/png');
+            }
+            
+            zip.file(`${textureBaseName}_roughness.${formatExt}`, dataURLToBlob(dataURL), {base64: false});
             exportCount++;
             updateProgress(60);
         }
         
         if (exportDisplacement.checked && displacementCanvas) {
-            zip.file(`${textureBaseName}_displacement.${format}`, dataURLToBlob(displacementCanvas.toDataURL(mimeType)), {base64: false});
-            exportCount++;
-            updateProgress(70);
-        }
-        
-        if (exportAO.checked && aoCanvas) {
-            zip.file(`${textureBaseName}_ao.${format}`, dataURLToBlob(aoCanvas.toDataURL(mimeType)), {base64: false});
+            // For displacement maps, prefer PNG for quality (or WebP if selected)
+            const dispFormat = format === 'jpeg' ? 'png' : format;
+            const dispExt = dispFormat === 'webp' ? 'webp' : 'png';
+            
+            let dataURL;
+            if (dispFormat === 'webp') {
+                dataURL = displacementCanvas.toDataURL('image/webp');
+            } else {
+                dataURL = displacementCanvas.toDataURL('image/png');
+            }
+            
+            zip.file(`${textureBaseName}_displacement.${dispExt}`, dataURLToBlob(dataURL), {base64: false});
             exportCount++;
             updateProgress(80);
         }
         
-        if (exportEmission && exportEmission.checked && emissionCanvas) {
-            zip.file(`${textureBaseName}_emission.${format}`, dataURLToBlob(emissionCanvas.toDataURL(mimeType)), {base64: false});
+        if (exportAO.checked && aoCanvas) {
+            let dataURL;
+            if (format === 'webp') {
+                dataURL = aoCanvas.toDataURL('image/webp');
+            } else if (format === 'jpeg') {
+                dataURL = aoCanvas.toDataURL('image/jpeg', 0.9);
+            } else {
+                dataURL = aoCanvas.toDataURL('image/png');
+            }
+            
+            zip.file(`${textureBaseName}_ao.${formatExt}`, dataURLToBlob(dataURL), {base64: false});
             exportCount++;
-            updateProgress(85);
+            updateProgress(90);
         }
         
         if (exportCount === 0) {
@@ -2735,7 +1293,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 saveAs(content, `${textureBaseName}_maps.zip`);
                 setTimeout(() => {
                     hideLoadingIndicator();
-                    showNotification(`${exportCount} texture maps exported successfully!`, 'success');
+                    showNotification(`${exportCount} texture maps exported successfully as ${format.toUpperCase()}!`, 'success');
                 }, 500);
             })
             .catch(function(error) {
@@ -2774,7 +1332,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Update rotation from sliders
     function updateRotation() {
-        if (!currentModel) return;
+        if (!sphere) return;
         
         // Disable auto-rotate when user drags sliders
         if (!isDraggingSlider) {
@@ -2784,26 +1342,27 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Apply rotation from sliders
-        currentModel.rotation.x = parseFloat(rotationX.value);
-        currentModel.rotation.y = parseFloat(rotationY.value);
+        sphere.rotation.x = parseFloat(rotationX.value);
+        sphere.rotation.y = parseFloat(rotationY.value);
     }
     
-    // Export Three.js code
+    // Export Three.js code with current format settings
     function exportThreejsCode() {
         if (!hasUploadedImage) {
             showNotification('Please upload a texture first', 'error');
             return;
         }
         
+        // Get selected format
+        const format = exportFormat.value;
+        const formatExt = format === 'webp' ? 'webp' : (format === 'jpeg' ? 'jpg' : 'png');
+        
+        // Normal and displacement maps should use PNG/WebP for quality
+        const normalFormat = format === 'jpeg' ? 'png' : formatExt;
+        const dispFormat = format === 'jpeg' ? 'png' : formatExt;
+        
         // Show loading indicator
         showLoadingIndicator('Generating Three.js code...', 50);
-        
-        // Get current UV settings
-        const repeatX = parseInt(uvRepeatX.value) || 1;
-        const repeatY = parseInt(uvRepeatY.value) || 1;
-        const offsetX = parseFloat(uvOffsetX.value) || 0;
-        const offsetY = parseFloat(uvOffsetY.value) || 0;
-        const rotation = parseFloat(uvRotation.value) || 0;
         
         // Create sample Three.js code with current settings
         const code = `// Three.js Material Example with Exported Textures
@@ -2824,22 +1383,11 @@ document.body.appendChild(renderer.domElement);
 
 // Load textures
 const textureLoader = new THREE.TextureLoader();
-const baseTexture = textureLoader.load('texture_basecolor.${formatRadios[0].checked ? 'png' : formatRadios[1].checked ? 'webp' : 'jpg'}');
-const normalTexture = textureLoader.load('texture_normal.${formatRadios[0].checked ? 'png' : formatRadios[1].checked ? 'webp' : 'jpg'}');
-const roughnessTexture = textureLoader.load('texture_roughness.${formatRadios[0].checked ? 'png' : formatRadios[1].checked ? 'webp' : 'jpg'}');
-const displacementTexture = textureLoader.load('texture_displacement.${formatRadios[0].checked ? 'png' : formatRadios[1].checked ? 'webp' : 'jpg'}');
-const aoTexture = textureLoader.load('texture_ao.${formatRadios[0].checked ? 'png' : formatRadios[1].checked ? 'webp' : 'jpg'}');
-${parseFloat(emissionStrength.value) > 0 ? `const emissionTexture = textureLoader.load('texture_emission.${formatRadios[0].checked ? 'png' : formatRadios[1].checked ? 'webp' : 'jpg'}');` : ""}
-
-// Set up texture properties
-const textures = [baseTexture, normalTexture, roughnessTexture, displacementTexture, aoTexture${parseFloat(emissionStrength.value) > 0 ? ", emissionTexture" : ""}];
-textures.forEach(texture => {
-    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-    texture.repeat.set(${repeatX}, ${repeatY});
-    texture.offset.set(${offsetX}, ${offsetY});
-    texture.rotation = ${rotation} * Math.PI / 180;
-    texture.center.set(0.5, 0.5); // Set rotation center
-});
+const baseTexture = textureLoader.load('texture_basecolor.${formatExt}');
+const normalTexture = textureLoader.load('texture_normal.${normalFormat}');
+const roughnessTexture = textureLoader.load('texture_roughness.${formatExt}');
+const displacementTexture = textureLoader.load('texture_displacement.${dispFormat}');
+const aoTexture = textureLoader.load('texture_ao.${formatExt}');
 
 // Create material with all maps
 const material = new THREE.MeshStandardMaterial({
@@ -2848,21 +1396,19 @@ const material = new THREE.MeshStandardMaterial({
     roughnessMap: roughnessTexture,
     displacementMap: displacementTexture,
     aoMap: aoTexture,
-    ${parseFloat(emissionStrength.value) > 0 ? `emissiveMap: emissionTexture,\n    emissive: new THREE.Color(0xffffff),\n    emissiveIntensity: ${emissionStrength.value},` : ""}
     normalScale: new THREE.Vector2(${normalStrength.value}, ${normalStrength.value}),
     roughness: ${roughnessStrength.value},
     metalness: ${metalness.value},
     displacementScale: ${displacementStrength.value}
 });
 
-// Create sphere geometry
-const geometry = new THREE.SphereGeometry(1, 64, 64);
+// Create a sphere geometry with high resolution for better displacement
+const geometry = new THREE.SphereGeometry(2, 64, 64);
+const mesh = new THREE.Mesh(geometry, material);
 
 // For ambient occlusion to work, we need UV2
 geometry.setAttribute('uv2', geometry.attributes.uv);
 
-// Create mesh
-const mesh = new THREE.Mesh(geometry, material);
 scene.add(mesh);
 
 // Add lights
