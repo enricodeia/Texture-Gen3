@@ -52,7 +52,7 @@
                             </div>
                         </div>
                         
-                        <!-- Material Type & Seamless Controls -->
+                        <!-- Seamless Controls -->
                         <div class="material-controls">
                             <div class="control-group">
                                 <label for="material-type">Material Type:</label>
@@ -67,18 +67,15 @@
                             </div>
                             
                             <div class="control-buttons">
-                                <button id="smart-enhance" class="control-btn smart-enhance-btn">
-                                    <i class="fas fa-magic"></i> Smart Enhance
-                                </button>
-                                <button id="make-seamless" class="control-btn seamless-btn">
-                                    <i class="fas fa-repeat"></i> Make Seamless
+                                <button id="toggle-seamless" class="control-btn seamless-btn full-width">
+                                    <i class="fas fa-repeat"></i> Toggle Seamless Mode
                                 </button>
                             </div>
                         </div>
                         
-                        <!-- Seamless Options Panel (hidden by default) -->
+                        <!-- Seamless Controls Panel -->
                         <div class="seamless-panel" id="seamless-panel">
-                            <h4>Seamless Options</h4>
+                            <h4>Seamless Tiling</h4>
                             <div class="seamless-controls">
                                 <div class="control-group">
                                     <label for="seamless-strength">Blend Strength</label>
@@ -95,9 +92,15 @@
                                         <option value="wrap">Wrap Around</option>
                                     </select>
                                 </div>
-                                <div class="seamless-buttons">
-                                    <button id="apply-seamless" class="control-btn">Apply</button>
-                                    <button id="cancel-seamless" class="control-btn secondary">Cancel</button>
+                                <div class="control-group">
+                                    <label for="seamless-tiles">Preview Tiles</label>
+                                    <div class="slider-container">
+                                        <input type="range" id="seamless-tiles" min="1" max="4" step="1" value="2">
+                                        <span class="value" id="seamless-tiles-value">2×2</span>
+                                    </div>
+                                </div>
+                                <div id="seamless-preview-container" class="seamless-preview-container">
+                                    <canvas id="seamless-preview"></canvas>
                                 </div>
                             </div>
                         </div>
@@ -106,13 +109,6 @@
                     <div class="preview-3d">
                         <div id="model-container"></div>
                         <div class="model-controls">
-                            <div class="model-tabs">
-                                <button class="model-tab active" data-model="sphere">Sphere</button>
-                                <button class="model-tab" data-model="cube">Cube</button>
-                                <button class="model-tab" data-model="plane">Plane</button>
-                                <button class="model-tab" data-model="cylinder">Cylinder</button>
-                            </div>
-                            
                             <div class="rotation-controls">
                                 <div class="rotation-group">
                                     <label>Rotation:</label>
@@ -562,26 +558,23 @@
                     <ol>
                         <li>Upload a texture image using drag & drop or the browse button</li>
                         <li>Adjust texture settings to your liking</li>
-                        <li>Preview the results on different 3D models</li>
+                        <li>Use the seamless mode to create tileable textures</li>
                         <li>Export individual maps or all maps as a ZIP file</li>
                     </ol>
                 </div>
                 
                 <div class="help-section">
-                    <h3>New Features in v3</h3>
+                    <h3>Features in v3</h3>
                     <ul>
                         <li>
-                            <strong>Seamless Textures:</strong> Create tileable textures with the new "Make Seamless" feature. Use different
-                            algorithms to get the best results for your specific texture.
+                            <strong>Seamless Textures:</strong> Create tileable textures with the interactive seamless mode.
+                            Preview the results instantly in the tiled view.
                         </li>
                         <li>
                             <strong>Enhanced UV Controls:</strong> More precise control over texture projection with separate X/Y repeat, offset, rotation, and scale.
                         </li>
                         <li>
-                            <strong>UV Editor:</strong> Edit UV mapping directly with the new UV Editor tab. Reposition, scale, and rotate UV islands.
-                        </li>
-                        <li>
-                            <strong>Multiple 3D Preview Models:</strong> View your textures on various 3D shapes including sphere, cube, cylinder, and plane.
+                            <strong>UV Editor:</strong> Edit UV mapping directly with the UV Editor tab. Reposition, scale, and rotate UV islands.
                         </li>
                     </ul>
                 </div>
@@ -602,10 +595,6 @@
                             <span>Export Three.js code</span>
                         </div>
                         <div class="shortcut">
-                            <kbd>S</kbd>
-                            <span>Smart enhance</span>
-                        </div>
-                        <div class="shortcut">
                             <kbd>Arrow Keys</kbd>
                             <span>Rotate model</span>
                         </div>
@@ -614,8 +603,8 @@
                             <span>Toggle HDRI lighting</span>
                         </div>
                         <div class="shortcut">
-                            <kbd>M</kbd>
-                            <span>Make seamless</span>
+                            <kbd>T</kbd>
+                            <span>Toggle seamless mode</span>
                         </div>
                     </div>
                 </div>
@@ -640,11 +629,10 @@
                     <h3>Features</h3>
                     <ul>
                         <li>Generate Base Color, Normal, Roughness, Displacement, AO, and Emission maps</li>
-                        <li>Live 3D preview with multiple model options</li>
-                        <li>Seamless texture creation</li>
+                        <li>Live 3D preview</li>
+                        <li>Interactive seamless texture creation with real-time preview</li>
                         <li>Advanced UV projection controls</li>
                         <li>Integrated UV editor</li>
-                        <li>Smart material enhancement</li>
                         <li>Export individual maps or complete texture sets</li>
                         <li>Generate Three.js code for your materials</li>
                     </ul>
