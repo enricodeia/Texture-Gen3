@@ -356,7 +356,7 @@ code, pre {
     transform: translateY(0);
 }
 
-/* Texture Stats (NEW) */
+/* Texture Stats */
 .texture-stats {
     position: absolute;
     bottom: 1rem;
@@ -536,6 +536,11 @@ code, pre {
     margin-bottom: 1.25rem;
 }
 
+.controls-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
 .controls-container h3, 
 .export-options h3,
 .maps-section h3 {
@@ -562,8 +567,8 @@ code, pre {
     border-radius: 2px;
 }
 
-/* Reset Button (NEW) */
-.reset-btn {
+/* Reset and Toggle Buttons */
+.reset-btn, .toggle-btn {
     background-color: var(--bg-accent);
     color: var(--text-secondary);
     border: 1px solid var(--border-color);
@@ -578,17 +583,30 @@ code, pre {
     transition: all var(--transition-normal);
 }
 
-.reset-btn:hover {
+.toggle-btn {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    justify-content: center;
+}
+
+.reset-btn:hover, .toggle-btn:hover {
     color: var(--text-primary);
     background-color: var(--bg-light);
     transform: translateY(-2px);
 }
 
-.reset-btn:active {
+.reset-btn:active, .toggle-btn:active {
     transform: translateY(0);
 }
 
-.reset-btn i {
+.toggle-btn.active {
+    color: var(--text-primary);
+    border-color: var(--primary-blue);
+    background-color: var(--primary-blue);
+}
+
+.reset-btn i, .toggle-btn i {
     font-size: 0.8rem;
 }
 
@@ -667,6 +685,15 @@ input[type="range"]::-moz-range-thumb:hover {
     transform: scale(1.2);
 }
 
+/* Color correction sliders */
+#hue::-webkit-slider-thumb {
+    background: linear-gradient(90deg, red, yellow, lime, cyan, blue, magenta, red);
+}
+
+#hue::-moz-range-thumb {
+    background: linear-gradient(90deg, red, yellow, lime, cyan, blue, magenta, red);
+}
+
 .value {
     min-width: 36px;
     text-align: center;
@@ -697,6 +724,11 @@ input[type="range"]::-moz-range-thumb:hover {
     color: var(--text-secondary);
     font-weight: 600;
     text-align: center;
+}
+
+/* Color correction container */
+.color-controls {
+    margin-bottom: 1.5rem;
 }
 
 /* === Export Options === */
