@@ -47,6 +47,20 @@
                             </div>
                             <div class="preview-overlay" id="preview-overlay">
                                 <img id="uploaded-image" src="" alt="Uploaded texture">
+                                <div class="texture-stats" id="texture-stats">
+                                    <div class="stats-item">
+                                        <span class="stats-label">Resolution:</span>
+                                        <span class="stats-value" id="resolution-stat">-</span>
+                                    </div>
+                                    <div class="stats-item">
+                                        <span class="stats-label">File Size:</span>
+                                        <span class="stats-value" id="filesize-stat">-</span>
+                                    </div>
+                                    <div class="stats-item">
+                                        <span class="stats-label">Format:</span>
+                                        <span class="stats-value" id="format-stat">-</span>
+                                    </div>
+                                </div>
                                 <button class="delete-btn" id="delete-image">Delete Texture</button>
                             </div>
                         </div>
@@ -54,8 +68,11 @@
                     
                     <div class="preview-3d">
                         <div id="model-container"></div>
-                        <div class="rotation-controls">
-                            <div class="rotation-group">
+                        <div class="preview-controls">
+                            <button id="toggle-grid" class="preview-btn" title="Toggle Grid Visibility">
+                                <i class="fas fa-border-all"></i>
+                            </button>
+                            <div class="rotation-controls">
                                 <label>Manual Rotation:</label>
                                 <div class="rotation-sliders">
                                     <div class="rotation-slider">
@@ -75,39 +92,13 @@
                     </div>
                 </div>
 
-                <!-- New Material Presets Section -->
-                <div class="presets-container">
-                    <h3>Material Presets</h3>
-                    <div class="presets-grid">
-                        <button class="preset-btn" data-preset="default">
-                            <i class="fas fa-palette"></i>
-                            <span>Default</span>
-                        </button>
-                        <button class="preset-btn" data-preset="metal">
-                            <i class="fas fa-cog"></i>
-                            <span>Metal</span>
-                        </button>
-                        <button class="preset-btn" data-preset="wood">
-                            <i class="fas fa-tree"></i>
-                            <span>Wood</span>
-                        </button>
-                        <button class="preset-btn" data-preset="stone">
-                            <i class="fas fa-mountain"></i>
-                            <span>Stone</span>
-                        </button>
-                        <button class="preset-btn" data-preset="fabric">
-                            <i class="fas fa-tshirt"></i>
-                            <span>Fabric</span>
-                        </button>
-                        <button class="preset-btn" data-preset="plastic">
-                            <i class="fas fa-dice-d6"></i>
-                            <span>Plastic</span>
+                <div class="controls-container">
+                    <div class="controls-header">
+                        <h3>Texture Settings</h3>
+                        <button id="reset-controls" class="reset-btn" title="Reset All Settings">
+                            <i class="fas fa-undo-alt"></i> Reset
                         </button>
                     </div>
-                </div>
-
-                <div class="controls-container">
-                    <h3>Texture Settings</h3>
                     <div class="controls-grid">
                         <div class="control-group">
                             <label for="base-strength">Base Color Strength</label>
@@ -180,7 +171,7 @@
                 <div class="export-options">
                     <h3>Export Options</h3>
                     <div class="export-container">
-                        <div class="export-group">
+                        <div class="export-checkboxes">
                             <div class="export-checkbox">
                                 <input type="checkbox" id="export-base" checked>
                                 <label for="export-base">Base Color</label>
@@ -203,7 +194,6 @@
                             </div>
                         </div>
                         
-                        <!-- Export Format Selection -->
                         <div class="format-selection">
                             <label for="export-format">Export Format:</label>
                             <select id="export-format" class="format-dropdown">
@@ -244,6 +234,7 @@
                                 <canvas id="base-map"></canvas>
                                 <div class="map-overlay">
                                     <span class="map-label">Base Color</span>
+                                    <span class="map-size" id="base-map-size">-</span>
                                 </div>
                             </div>
                         </div>
@@ -265,6 +256,7 @@
                                 <canvas id="normal-map"></canvas>
                                 <div class="map-overlay">
                                     <span class="map-label">Normal</span>
+                                    <span class="map-size" id="normal-map-size">-</span>
                                 </div>
                             </div>
                         </div>
@@ -286,6 +278,7 @@
                                 <canvas id="roughness-map"></canvas>
                                 <div class="map-overlay">
                                     <span class="map-label">Roughness</span>
+                                    <span class="map-size" id="roughness-map-size">-</span>
                                 </div>
                             </div>
                         </div>
@@ -307,6 +300,7 @@
                                 <canvas id="displacement-map"></canvas>
                                 <div class="map-overlay">
                                     <span class="map-label">Displacement</span>
+                                    <span class="map-size" id="displacement-map-size">-</span>
                                 </div>
                             </div>
                         </div>
@@ -328,6 +322,7 @@
                                 <canvas id="ao-map"></canvas>
                                 <div class="map-overlay">
                                     <span class="map-label">AO</span>
+                                    <span class="map-size" id="ao-map-size">-</span>
                                 </div>
                             </div>
                         </div>
@@ -353,10 +348,13 @@
                                 <strong>3D Preview:</strong> View your texture applied to a 3D sphere in real-time
                             </li>
                             <li>
-                                <strong>Rotation:</strong> Control the 3D model rotation manually or enable auto-rotate
+                                <strong>Direct Manipulation:</strong> Click and drag on the 3D preview to rotate the model directly
                             </li>
                             <li>
-                                <strong>Material Presets:</strong> Quickly apply settings for common material types
+                                <strong>Toggle Grid:</strong> Turn the orientation grid on or off for cleaner preview
+                            </li>
+                            <li>
+                                <strong>Reset Controls:</strong> Quickly return all settings to default values
                             </li>
                             <li>
                                 <strong>Base Color Strength:</strong> Adjust the intensity of the base color/albedo map
@@ -410,30 +408,6 @@
                 </div>
                 
                 <div class="help-section">
-                    <h3>Material Presets</h3>
-                    <ul class="help-list">
-                        <li>
-                            <strong>Default:</strong> Balanced settings, good starting point for most textures
-                        </li>
-                        <li>
-                            <strong>Metal:</strong> High metalness, low roughness, enhanced reflectivity
-                        </li>
-                        <li>
-                            <strong>Wood:</strong> Low metalness, medium roughness, enhanced displacement
-                        </li>
-                        <li>
-                            <strong>Stone:</strong> Low metalness, high roughness, enhanced normal detail
-                        </li>
-                        <li>
-                            <strong>Fabric:</strong> Zero metalness, high roughness, subtle normal mapping
-                        </li>
-                        <li>
-                            <strong>Plastic:</strong> Very low metalness, medium-low roughness, smooth finish
-                        </li>
-                    </ul>
-                </div>
-                
-                <div class="help-section">
                     <h3>Map Types Explained</h3>
                     <ul class="help-list">
                         <li>
@@ -462,9 +436,6 @@
                         </li>
                         <li>
                             <strong>Even Lighting:</strong> Source images with even, diffuse lighting work best. Avoid images with harsh shadows or reflections.
-                        </li>
-                        <li>
-                            <strong>Try Different Presets:</strong> Use the material presets as starting points, then fine-tune with the sliders.
                         </li>
                         <li>
                             <strong>Format Selection:</strong> Use PNG for technical maps (normal, displacement), WebP for general use, and JPEG only for base color where quality is less critical.
@@ -504,11 +475,7 @@
                         </div>
                         <div class="feature-item">
                             <i class="fas fa-check"></i>
-                            <span>Real-time 3D preview with interactive rotation</span>
-                        </div>
-                        <div class="feature-item">
-                            <i class="fas fa-check"></i>
-                            <span>Material presets for common surfaces</span>
+                            <span>Real-time 3D preview with interactive manipulation</span>
                         </div>
                         <div class="feature-item">
                             <i class="fas fa-check"></i>
@@ -553,6 +520,10 @@
                         <div class="feature-item">
                             <i class="fas fa-check"></i>
                             <span>Client-side processing (no uploads)</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>Detailed texture statistics display</span>
                         </div>
                     </div>
                 </div>
