@@ -13,8 +13,6 @@ document.addEventListener('DOMContentLoaded', function() {
     let animationFrameId = null;
     let previousMousePosition = { x: 0, y: 0 };
     let isGridVisible = true;
-    let isColorCorrectionEnabled = true;
-    let originalBaseImageData = null; // For storing the original base image before correction
     
     // Default control values for reset
     const defaultValues = {
@@ -26,11 +24,7 @@ document.addEventListener('DOMContentLoaded', function() {
         metalness: 0.0,
         lightX: 5,
         lightY: 5,
-        lightZ: 5,
-        brightness: 0,
-        contrast: 0,
-        saturation: 0,
-        hue: 0
+        lightZ: 5
     };
     
     // DOM Elements
@@ -80,18 +74,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const lightX = document.getElementById('light-x');
     const lightY = document.getElementById('light-y');
     const lightZ = document.getElementById('light-z');
-    
-    // Color Correction Controls
-    const brightnessSlider = document.getElementById('brightness');
-    const contrastSlider = document.getElementById('contrast');
-    const saturationSlider = document.getElementById('saturation');
-    const hueSlider = document.getElementById('hue');
-    const brightnessValue = document.getElementById('brightness-value');
-    const contrastValue = document.getElementById('contrast-value');
-    const saturationValue = document.getElementById('saturation-value');
-    const hueValue = document.getElementById('hue-value');
-    const toggleColorCorrectionBtn = document.getElementById('toggle-color-correction');
-    const resetColorCorrectionBtn = document.getElementById('reset-color-correction');
     
     // Value display elements
     const baseValue = document.getElementById('base-value');
@@ -191,7 +173,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Initialize UI state
             toggleGridBtn.classList.add('active');
-            toggleColorCorrectionBtn.classList.add('active');
+            toggleAutoRotateBtn.classList.add('active');
             
         } catch (error) {
             console.error('Error initializing application:', error);
@@ -450,14 +432,6 @@ document.addEventListener('DOMContentLoaded', function() {
         aoStrength.addEventListener('input', updateTextures);
         metalness.addEventListener('input', updateMaterial);
         
-        // Color correction sliders
-        brightnessSlider.addEventListener('input', updateColorCorrection);
-        contrastSlider.addEventListener('input', updateColorCorrection);
-        saturationSlider.addEventListener('input', updateColorCorrection);
-        hueSlider.addEventListener('input', updateColorCorrection);
-        toggleColorCorrectionBtn.addEventListener('click', toggleColorCorrection);
-        resetColorCorrectionBtn.addEventListener('click', resetColorCorrection);
-        
         // Light position
         lightX.addEventListener('input', updateLightPosition);
         lightY.addEventListener('input', updateLightPosition);
@@ -517,112 +491,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }, { once: true });
             });
         });
-    }
-    
-    // Toggle color correction
-    function toggleColorCorrection() {
-        isColorCorrectionEnabled = !isColorCorrectionEnabled;
-        
-        if (isColorCorrectionEnabled) {
-            toggleColorCorrectionBtn.classList.add('active');
-            showNotification('Color correction enabled', 'info');
-            updateColorCorrection(); // Apply corrections
-        } else {
-            toggleColorCorrectionBtn.classList.remove('active');
-            showNotification('Color correction disabled', 'info');
-            
-            // Restore original image without color correction
-            if (originalBaseImageData) {
-                const ctx = baseCanvas.getContext('2d');
-                ctx.putImageData(originalBaseImageData, 0, 0);
-                
-                // Update base texture
-                baseTexture.needsUpdate = true;
-            }
-        }
-    }
-    
-    // Reset color correction controls
-    function resetColorCorrection() {
-        brightnessSlider.value = defaultValues.brightness;
-        contrastSlider.value = defaultValues.contrast;
-        saturationSlider.value = defaultValues.saturation;
-        hueSlider.value = defaultValues.hue;
-        
-        brightnessValue.textContent = defaultValues.brightness;
-        contrastValue.textContent = defaultValues.contrast;
-        saturationValue.textContent = defaultValues.saturation;
-        hueValue.textContent = defaultValues.hue + '°';
-        
-        // Apply the reset
-        if (isColorCorrectionEnabled && originalBaseImageData) {
-            updateColorCorrection();
-        }
-        
-        showNotification('Color correction reset', 'success');
-    }
-    
-    // Update color correction based on slider values
-    function updateColorCorrection() {
-        if (!originalBaseImageData || !hasUploadedImage) return;
-        
-        // Skip if color correction is disabled
-        if (!isColorCorrectionEnabled) return;
-        
-        // Get current correction values
-        const brightness = parseInt(brightnessSlider.value);
-        const contrast = parseInt(contrastSlider.value);
-        const saturation = parseInt(saturationSlider.value);
-        const hue = parseInt(hueSlider.value);
-        
-        // Update display values
-        brightnessValue.textContent = brightness;
-        contrastValue.textContent = contrast;
-        saturationValue.textContent = saturation;
-        hueValue.textContent = hue + '°';
-        
-        // Create a temporary canvas for processing
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = originalBaseImageData.width;
-        tempCanvas.height = originalBaseImageData.height;
-        const tempCtx = tempCanvas.getContext('2d');
-        
-        // Draw the original image data
-        tempCtx.putImageData(originalBaseImageData, 0, 0);
-        
-        // Apply filters for color correction
-        const filters = [];
-        
-        // Only add filters that are not at default/zero value
-        if (brightness !== 0) {
-            filters.push(`brightness(${100 + brightness}%)`);
-        }
-        if (contrast !== 0) {
-            filters.push(`contrast(${100 + contrast}%)`);
-        }
-        if (saturation !== 0) {
-            filters.push(`saturate(${100 + saturation}%)`);
-        }
-        if (hue !== 0) {
-            filters.push(`hue-rotate(${hue}deg)`);
-        }
-        
-        // Apply filters if any are present
-        if (filters.length > 0) {
-            tempCtx.filter = filters.join(' ');
-            tempCtx.drawImage(tempCanvas, 0, 0);
-            tempCtx.filter = 'none';
-        }
-        
-        // Draw the processed image to the base canvas
-        const ctx = baseCanvas.getContext('2d');
-        ctx.clearRect(0, 0, baseCanvas.width, baseCanvas.height);
-        ctx.drawImage(tempCanvas, 0, 0);
-        
-        // Update base texture for the 3D preview
-        if (baseTexture) {
-            baseTexture.needsUpdate = true;
-        }
     }
     
     // Mouse down handler for model container
@@ -813,9 +681,6 @@ document.addEventListener('DOMContentLoaded', function() {
             );
         }
         
-        // Also reset color correction
-        resetColorCorrection();
-        
         showNotification('Settings reset to defaults', 'success');
     }
     
@@ -862,10 +727,6 @@ document.addEventListener('DOMContentLoaded', function() {
         displacementTexture = null;
         aoTexture = null;
         originalImageData = null;
-        originalBaseImageData = null;
-        
-        // Reset color correction sliders
-        resetColorCorrection();
         
         showNotification('Image removed', 'info');
     }
@@ -926,15 +787,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         
                         // Generate texture maps
                         generateTextureMaps(img);
-                        
-                        // Store original base map for color correction
-                        const ctx = baseCanvas.getContext('2d');
-                        originalBaseImageData = ctx.getImageData(0, 0, baseCanvas.width, baseCanvas.height);
-                        
-                        // Apply color correction if enabled
-                        if (isColorCorrectionEnabled) {
-                            updateColorCorrection();
-                        }
                         
                         updateProgress(90);
                         updateLoadingMessage("Applying to 3D model... Almost there!");
