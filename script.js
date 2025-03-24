@@ -9,8 +9,23 @@ document.addEventListener('DOMContentLoaded', function() {
     let autoRotate = true;
     let rotationSpeed = { x: 0.0005, y: 0.004 };
     let isDraggingSlider = false;
+    let isDraggingSphere = false;
     let animationFrameId = null;
-    let activePreset = "default";
+    let previousMousePosition = { x: 0, y: 0 };
+    let isGridVisible = true;
+    
+    // Default control values for reset
+    const defaultValues = {
+        baseStrength: 1.0,
+        normalStrength: 1.0,
+        roughnessStrength: 0.5,
+        displacementStrength: 0.2,
+        aoStrength: 0.5,
+        metalness: 0.0,
+        lightX: 5,
+        lightY: 5,
+        lightZ: 5
+    };
     
     // DOM Elements
     const uploadArea = document.getElementById('upload-area');
@@ -20,6 +35,18 @@ document.addEventListener('DOMContentLoaded', function() {
     const uploadedImage = document.getElementById('uploaded-image');
     const deleteImageBtn = document.getElementById('delete-image');
     const modelContainer = document.getElementById('model-container');
+    
+    // Stats Elements
+    const resolutionStat = document.getElementById('resolution-stat');
+    const filesizeStat = document.getElementById('filesize-stat');
+    const formatStat = document.getElementById('format-stat');
+    
+    // Map Size Elements
+    const baseMapSize = document.getElementById('base-map-size');
+    const normalMapSize = document.getElementById('normal-map-size');
+    const roughnessMapSize = document.getElementById('roughness-map-size');
+    const displacementMapSize = document.getElementById('displacement-map-size');
+    const aoMapSize = document.getElementById('ao-map-size');
     
     // Navigation Tabs
     const navTabs = document.querySelectorAll('.nav-tab');
@@ -80,8 +107,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const displacementFormat = document.getElementById('displacement-format');
     const aoFormat = document.getElementById('ao-format');
     
-    // Material presets
-    const presetButtons = document.querySelectorAll('.preset-btn');
+    // New UI controls
+    const toggleGridBtn = document.getElementById('toggle-grid');
+    const resetControlsBtn = document.getElementById('reset-controls');
     
     // Processing indicator
     const processingIndicator = document.getElementById('processing-indicator');
@@ -114,52 +142,6 @@ document.addEventListener('DOMContentLoaded', function() {
         "Enhancing reality without the RTX graphics card...",
         "Calculating how shadows would hide if they could..."
     ];
-    
-    // Material preset definitions
-    const materialPresets = {
-        default: {
-            normalStrength: 1.0,
-            roughnessStrength: 0.5,
-            displacementStrength: 0.2,
-            aoStrength: 0.5,
-            metalness: 0.0
-        },
-        metal: {
-            normalStrength: 0.8,
-            roughnessStrength: 0.2,
-            displacementStrength: 0.1,
-            aoStrength: 0.3,
-            metalness: 0.9
-        },
-        wood: {
-            normalStrength: 1.2,
-            roughnessStrength: 0.7,
-            displacementStrength: 0.3,
-            aoStrength: 0.8,
-            metalness: 0.0
-        },
-        stone: {
-            normalStrength: 1.5,
-            roughnessStrength: 0.8,
-            displacementStrength: 0.4,
-            aoStrength: 0.7,
-            metalness: 0.0
-        },
-        fabric: {
-            normalStrength: 0.7,
-            roughnessStrength: 0.9,
-            displacementStrength: 0.15,
-            aoStrength: 0.6,
-            metalness: 0.0
-        },
-        plastic: {
-            normalStrength: 0.6,
-            roughnessStrength: 0.3,
-            displacementStrength: 0.1,
-            aoStrength: 0.4,
-            metalness: 0.1
-        }
-    };
     
     // Initialize the application
     init();
@@ -363,7 +345,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Add automatic or manual rotation to the sphere
         if (sphere) {
-            if (autoRotate) {
+            if (autoRotate && !isDraggingSphere) {
                 sphere.rotation.y += rotationSpeed.y;
                 sphere.rotation.x += rotationSpeed.x;
                 
@@ -451,17 +433,11 @@ document.addEventListener('DOMContentLoaded', function() {
         lightY.addEventListener('input', updateLightPosition);
         lightZ.addEventListener('input', updateLightPosition);
         
-        // Material presets
-        presetButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const preset = button.dataset.preset;
-                applyMaterialPreset(preset);
-                
-                // Update active button UI
-                presetButtons.forEach(btn => btn.classList.remove('active'));
-                button.classList.add('active');
-            });
-        });
+        // Toggle grid visibility
+        toggleGridBtn.addEventListener('click', toggleGridVisibility);
+        
+        // Reset controls
+        resetControlsBtn.addEventListener('click', resetControls);
         
         // Download buttons with format selection
         downloadBase.addEventListener('click', () => downloadTexture(baseCanvas, 'basecolor-map', baseFormat.value));
@@ -482,6 +458,10 @@ document.addEventListener('DOMContentLoaded', function() {
         rotationX.addEventListener('input', updateRotation);
         rotationY.addEventListener('input', updateRotation);
         toggleAutoRotateBtn.addEventListener('click', toggleAutoRotation);
+        
+        // Direct sphere manipulation
+        modelContainer.addEventListener('mousedown', onModelMouseDown);
+        modelContainer.addEventListener('touchstart', onModelTouchStart, { passive: false });
         
         // When sliders are used, set dragging flag
         const sliders = document.querySelectorAll('input[type="range"]');
@@ -509,49 +489,195 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Apply material preset
-    function applyMaterialPreset(preset) {
-        if (!materialPresets[preset]) {
-            console.error(`Preset ${preset} not found`);
-            return;
+    // Mouse down handler for model container
+    function onModelMouseDown(event) {
+        if (!sphere) return;
+        
+        isDraggingSphere = true;
+        previousMousePosition = {
+            x: event.clientX,
+            y: event.clientY
+        };
+        
+        // Disable auto-rotation when user starts dragging
+        if (autoRotate) {
+            // Don't turn off the flag, just pause rotation
+            // This way it will resume when the user releases
         }
         
-        const settings = materialPresets[preset];
+        // Add mouse move and mouse up listeners
+        document.addEventListener('mousemove', onModelMouseMove);
+        document.addEventListener('mouseup', onModelMouseUp);
         
-        // Update slider values
-        normalStrength.value = settings.normalStrength;
-        roughnessStrength.value = settings.roughnessStrength;
-        displacementStrength.value = settings.displacementStrength;
-        aoStrength.value = settings.aoStrength;
-        metalness.value = settings.metalness;
+        // Prevent default behavior
+        event.preventDefault();
+    }
+    
+    // Mouse move handler for model container
+    function onModelMouseMove(event) {
+        if (!isDraggingSphere || !sphere) return;
+        
+        const deltaMove = {
+            x: event.clientX - previousMousePosition.x,
+            y: event.clientY - previousMousePosition.y
+        };
+        
+        // Calculate rotation based on mouse movement
+        // Adjust sensitivity as needed
+        const rotationSensitivity = 0.01;
+        sphere.rotation.y += deltaMove.x * rotationSensitivity;
+        sphere.rotation.x += deltaMove.y * rotationSensitivity;
+        
+        // Update rotation sliders to match the new rotation
+        rotationX.value = sphere.rotation.x;
+        rotationY.value = sphere.rotation.y;
+        
+        // Update previous mouse position
+        previousMousePosition = {
+            x: event.clientX,
+            y: event.clientY
+        };
+    }
+    
+    // Mouse up handler for model container
+    function onModelMouseUp() {
+        isDraggingSphere = false;
+        
+        // Remove mouse move and mouse up listeners
+        document.removeEventListener('mousemove', onModelMouseMove);
+        document.removeEventListener('mouseup', onModelMouseUp);
+    }
+    
+    // Touch start handler for model container (mobile)
+    function onModelTouchStart(event) {
+        if (!sphere) return;
+        
+        // Prevent default behavior (e.g., scrolling)
+        event.preventDefault();
+        
+        isDraggingSphere = true;
+        
+        if (event.touches.length === 1) {
+            // Single touch for rotation
+            previousMousePosition = {
+                x: event.touches[0].clientX,
+                y: event.touches[0].clientY
+            };
+            
+            // Add touch move and touch end listeners
+            document.addEventListener('touchmove', onModelTouchMove, { passive: false });
+            document.addEventListener('touchend', onModelTouchEnd);
+        }
+    }
+    
+    // Touch move handler for model container (mobile)
+    function onModelTouchMove(event) {
+        if (!isDraggingSphere || !sphere) return;
+        
+        // Prevent default behavior (e.g., scrolling)
+        event.preventDefault();
+        
+        if (event.touches.length === 1) {
+            // Single touch for rotation
+            const deltaMove = {
+                x: event.touches[0].clientX - previousMousePosition.x,
+                y: event.touches[0].clientY - previousMousePosition.y
+            };
+            
+            // Calculate rotation based on touch movement
+            // Adjust sensitivity as needed
+            const rotationSensitivity = 0.01;
+            sphere.rotation.y += deltaMove.x * rotationSensitivity;
+            sphere.rotation.x += deltaMove.y * rotationSensitivity;
+            
+            // Update rotation sliders to match the new rotation
+            rotationX.value = sphere.rotation.x;
+            rotationY.value = sphere.rotation.y;
+            
+            // Update previous touch position
+            previousMousePosition = {
+                x: event.touches[0].clientX,
+                y: event.touches[0].clientY
+            };
+        }
+    }
+    
+    // Touch end handler for model container (mobile)
+    function onModelTouchEnd() {
+        isDraggingSphere = false;
+        
+        // Remove touch move and touch end listeners
+        document.removeEventListener('touchmove', onModelTouchMove);
+        document.removeEventListener('touchend', onModelTouchEnd);
+    }
+    
+    // Toggle grid visibility
+    function toggleGridVisibility() {
+        if (grid) {
+            isGridVisible = !isGridVisible;
+            grid.visible = isGridVisible;
+            
+            // Update button state
+            if (isGridVisible) {
+                toggleGridBtn.classList.add('active');
+                showNotification('Grid enabled', 'info');
+            } else {
+                toggleGridBtn.classList.remove('active');
+                showNotification('Grid disabled', 'info');
+            }
+        }
+    }
+    
+    // Reset all controls to default values
+    function resetControls() {
+        // Reset all sliders to default values
+        baseStrength.value = defaultValues.baseStrength;
+        normalStrength.value = defaultValues.normalStrength;
+        roughnessStrength.value = defaultValues.roughnessStrength;
+        displacementStrength.value = defaultValues.displacementStrength;
+        aoStrength.value = defaultValues.aoStrength;
+        metalness.value = defaultValues.metalness;
+        lightX.value = defaultValues.lightX;
+        lightY.value = defaultValues.lightY;
+        lightZ.value = defaultValues.lightZ;
         
         // Update display values
-        normalValue.textContent = settings.normalStrength.toFixed(1);
-        roughnessValue.textContent = settings.roughnessStrength.toFixed(1);
-        displacementValue.textContent = settings.displacementStrength.toFixed(1);
-        aoValue.textContent = settings.aoStrength.toFixed(1);
-        metalnessValue.textContent = settings.metalness.toFixed(1);
+        baseValue.textContent = defaultValues.baseStrength.toFixed(1);
+        normalValue.textContent = defaultValues.normalStrength.toFixed(1);
+        roughnessValue.textContent = defaultValues.roughnessStrength.toFixed(1);
+        displacementValue.textContent = defaultValues.displacementStrength.toFixed(1);
+        aoValue.textContent = defaultValues.aoStrength.toFixed(1);
+        metalnessValue.textContent = defaultValues.metalness.toFixed(1);
         
-        // Update material
+        // Update material if a sphere exists
         if (sphere && sphere.material) {
+            sphere.material.roughness = defaultValues.roughnessStrength;
+            sphere.material.metalness = defaultValues.metalness;
+            
             if (sphere.material.normalMap) {
-                sphere.material.normalScale.set(settings.normalStrength, settings.normalStrength);
+                sphere.material.normalScale.set(
+                    defaultValues.normalStrength,
+                    defaultValues.normalStrength
+                );
             }
             
             if (sphere.material.displacementMap) {
-                sphere.material.displacementScale = settings.displacementStrength;
+                sphere.material.displacementScale = defaultValues.displacementStrength;
             }
             
-            sphere.material.roughness = settings.roughnessStrength;
-            sphere.material.metalness = settings.metalness;
             sphere.material.needsUpdate = true;
         }
         
-        // Save active preset
-        activePreset = preset;
+        // Update light position
+        if (light) {
+            light.position.set(
+                defaultValues.lightX,
+                defaultValues.lightY,
+                defaultValues.lightZ
+            );
+        }
         
-        // Show notification
-        showNotification(`Applied ${preset.charAt(0).toUpperCase() + preset.slice(1)} material preset`, 'success');
+        showNotification('Settings reset to defaults', 'success');
     }
     
     // Clear the uploaded image
@@ -560,6 +686,18 @@ document.addEventListener('DOMContentLoaded', function() {
         previewOverlay.style.display = 'none';
         uploadedImage.src = '';
         hasUploadedImage = false;
+        
+        // Reset stats
+        resolutionStat.textContent = '-';
+        filesizeStat.textContent = '-';
+        formatStat.textContent = '-';
+        
+        // Reset map sizes
+        baseMapSize.textContent = '-';
+        normalMapSize.textContent = '-';
+        roughnessMapSize.textContent = '-';
+        displacementMapSize.textContent = '-';
+        aoMapSize.textContent = '-';
         
         // Remove textures from sphere
         if (sphere && sphere.material) {
@@ -627,6 +765,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 previewOverlay.style.display = 'flex';
                 hasUploadedImage = true;
                 
+                // Update texture stats
+                updateTextureStats(file);
+                
                 // Load the image to process it
                 const img = new Image();
                 img.onload = function() {
@@ -672,6 +813,45 @@ document.addEventListener('DOMContentLoaded', function() {
         };
         
         reader.readAsDataURL(file);
+    }
+    
+    // Update texture stats display
+    function updateTextureStats(file) {
+        // Format file size
+        const fileSizeKB = file.size / 1024;
+        let fileSizeStr;
+        
+        if (fileSizeKB >= 1024) {
+            fileSizeStr = (fileSizeKB / 1024).toFixed(2) + ' MB';
+        } else {
+            fileSizeStr = fileSizeKB.toFixed(2) + ' KB';
+        }
+        
+        // Get image format from MIME type
+        const formatMatch = file.type.match(/image\/(\w+)/);
+        const format = formatMatch ? formatMatch[1].toUpperCase() : 'Unknown';
+        
+        // Update stats display
+        filesizeStat.textContent = fileSizeStr;
+        formatStat.textContent = format;
+        
+        // Resolution will be updated when the image loads
+        const img = new Image();
+        img.onload = function() {
+            resolutionStat.textContent = img.width + ' × ' + img.height;
+        };
+        img.src = URL.createObjectURL(file);
+    }
+    
+    // Update map size information
+    function updateMapSizes() {
+        if (baseCanvas.width && baseCanvas.height) {
+            baseMapSize.textContent = `${baseCanvas.width} × ${baseCanvas.height}`;
+            normalMapSize.textContent = `${normalCanvas.width} × ${normalCanvas.height}`;
+            roughnessMapSize.textContent = `${roughnessCanvas.width} × ${roughnessCanvas.height}`;
+            displacementMapSize.textContent = `${displacementCanvas.width} × ${displacementCanvas.height}`;
+            aoMapSize.textContent = `${aoCanvas.width} × ${aoCanvas.height}`;
+        }
     }
     
     // Get a random loading message
@@ -799,6 +979,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Generate ambient occlusion map
         generateAOMap(originalImageData);
+        
+        // Update map sizes display
+        updateMapSizes();
     }
     
     // Generate base color map (formerly diffuse)
@@ -1142,6 +1325,33 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    // Estimate file size based on format and canvas
+    function estimateFileSize(canvas, format) {
+        // Get canvas dimensions
+        const width = canvas.width;
+        const height = canvas.height;
+        
+        // Base size calculation (width * height * channels)
+        let baseSizeBytes = width * height * 4; // 4 channels (RGBA)
+        
+        // Compression ratios (approximate)
+        const compressionRatios = {
+            png: 0.8,    // PNG is lossless but has some compression
+            webp: 0.4,   // WebP has good compression
+            jpeg: 0.2    // JPEG has high compression
+        };
+        
+        // Calculate estimated file size based on format
+        const estimatedSizeBytes = baseSizeBytes * compressionRatios[format];
+        
+        // Convert to KB or MB for display
+        if (estimatedSizeBytes > 1024 * 1024) {
+            return (estimatedSizeBytes / (1024 * 1024)).toFixed(2) + ' MB';
+        } else {
+            return (estimatedSizeBytes / 1024).toFixed(2) + ' KB';
+        }
+    }
+    
     // Download texture as image with selected format
     function downloadTexture(canvas, filename, format = 'png') {
         if (!hasUploadedImage) {
@@ -1375,7 +1585,7 @@ camera.position.z = 5;
 
 const renderer = new THREE.WebGLRenderer({ 
     antialias: true,
-    alpha: true
+    alpha: true 
 });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
