@@ -168,6 +168,54 @@
                     </div>
                 </div>
                 
+                <!-- Color Correction Section -->
+                <div class="controls-container color-controls">
+                    <div class="controls-header">
+                        <h3>Color Correction</h3>
+                        <div class="controls-actions">
+                            <button id="toggle-color-correction" class="toggle-btn" title="Enable/Disable Color Correction">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button id="reset-color-correction" class="reset-btn" title="Reset Color Correction">
+                                <i class="fas fa-undo-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="controls-grid">
+                        <div class="control-group">
+                            <label for="brightness">Brightness</label>
+                            <div class="slider-container">
+                                <input type="range" id="brightness" min="-100" max="100" step="1" value="0">
+                                <span class="value" id="brightness-value">0</span>
+                            </div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label for="contrast">Contrast</label>
+                            <div class="slider-container">
+                                <input type="range" id="contrast" min="-100" max="100" step="1" value="0">
+                                <span class="value" id="contrast-value">0</span>
+                            </div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label for="saturation">Saturation</label>
+                            <div class="slider-container">
+                                <input type="range" id="saturation" min="-100" max="100" step="1" value="0">
+                                <span class="value" id="saturation-value">0</span>
+                            </div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label for="hue">Hue Shift</label>
+                            <div class="slider-container">
+                                <input type="range" id="hue" min="-180" max="180" step="1" value="0">
+                                <span class="value" id="hue-value">0°</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="export-options">
                     <h3>Export Options</h3>
                     <div class="export-container">
@@ -381,6 +429,30 @@
                     </div>
                     
                     <div class="help-section">
+                        <h3>Color Correction</h3>
+                        <ul class="help-list">
+                            <li>
+                                <strong>Brightness:</strong> Adjust the overall lightness of the base color map
+                            </li>
+                            <li>
+                                <strong>Contrast:</strong> Increase or decrease the difference between light and dark areas
+                            </li>
+                            <li>
+                                <strong>Saturation:</strong> Control the intensity of colors in the base texture
+                            </li>
+                            <li>
+                                <strong>Hue Shift:</strong> Rotate the color wheel to change the overall color tone
+                            </li>
+                            <li>
+                                <strong>Toggle:</strong> Enable or disable color correction effects
+                            </li>
+                            <li>
+                                <strong>Reset:</strong> Return all color correction settings to their default values
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="help-section">
                         <h3>Exporting Your Maps</h3>
                         <ul class="help-list">
                             <li>
@@ -441,6 +513,9 @@
                             <strong>Format Selection:</strong> Use PNG for technical maps (normal, displacement), WebP for general use, and JPEG only for base color where quality is less critical.
                         </li>
                         <li>
+                            <strong>Color Correction:</strong> Adjust brightness and contrast to optimize texture details before exporting.
+                        </li>
+                        <li>
                             <strong>Adjust Map Strength:</strong> Use the sliders to fine-tune each map's intensity for your specific texture.
                         </li>
                         <li>
@@ -476,6 +551,10 @@
                         <div class="feature-item">
                             <i class="fas fa-check"></i>
                             <span>Real-time 3D preview with interactive manipulation</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>Advanced color correction tools</span>
                         </div>
                         <div class="feature-item">
                             <i class="fas fa-check"></i>
