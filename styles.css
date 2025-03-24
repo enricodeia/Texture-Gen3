@@ -1151,6 +1151,66 @@ input[type="range"]::-moz-range-thumb:hover {
     line-height: 1.6;
 }
 
+/* Enhanced Quick Start Section */
+.quick-start {
+    margin-bottom: 2rem;
+    background-color: var(--bg-dark);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+    border-left: 4px solid var(--primary-green);
+}
+
+.quick-start h3 {
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.quick-start h3 i {
+    color: var(--primary-green);
+}
+
+.quick-steps {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+}
+
+.quick-step {
+    flex-basis: calc(50% - 0.75rem);
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+}
+
+.step-number {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background-color: var(--primary-green);
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.step-content strong {
+    display: block;
+    color: var(--text-primary);
+    margin-bottom: 0.3rem;
+}
+
+.step-content p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+/* Enhanced Help Section Grid */
 .help-section-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1158,7 +1218,7 @@ input[type="range"]::-moz-range-thumb:hover {
     margin-bottom: 2rem;
 }
 
-.help-section, .technical-notes {
+.help-section {
     background-color: var(--bg-dark);
     border-radius: 10px;
     padding: 1.5rem;
@@ -1168,19 +1228,26 @@ input[type="range"]::-moz-range-thumb:hover {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
 }
 
-.help-section:hover, .technical-notes:hover {
+.help-section:hover {
     transform: translateY(-3px);
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
     border-color: var(--primary-blue);
 }
 
-.help-section h3, .features-container h3, .use-cases h3, .technical-notes h3 {
+.help-section h3 {
     font-size: 1.25rem;
     margin-bottom: 1.25rem;
     color: var(--text-primary);
     border-bottom: 1px solid var(--border-color);
     padding-bottom: 0.75rem;
     position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.help-section h3 i {
+    color: var(--primary-blue);
 }
 
 .help-list {
@@ -1217,8 +1284,146 @@ input[type="range"]::-moz-range-thumb:hover {
     line-height: 1.5;
 }
 
-.features-container, .use-cases, .technical-notes {
+/* Enhanced Map Types Grid */
+.map-types-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+}
+
+.map-type-card {
+    display: flex;
+    gap: 1rem;
+    background-color: var(--bg-darker);
+    padding: 1.25rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    transition: all var(--transition-normal);
+}
+
+.map-type-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+    border-color: var(--primary-blue);
+}
+
+.map-type-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: rgba(37, 99, 235, 0.1);
+    color: var(--primary-blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.map-type-content h4 {
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.map-type-content p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+/* Enhanced Troubleshooting Section */
+.troubleshooting-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+}
+
+.troubleshooting-item {
+    background-color: var(--bg-darker);
+    padding: 1.25rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    transition: all var(--transition-normal);
+}
+
+.troubleshooting-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+    border-color: var(--primary-blue);
+}
+
+.troubleshooting-item h4 {
+    color: var(--danger-color);
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.troubleshooting-item p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+/* Enhanced Keyboard Shortcuts Section */
+.shortcuts-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.shortcut {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    background-color: var(--bg-darker);
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    transition: all var(--transition-normal);
+    text-align: center;
+}
+
+.shortcut:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+    border-color: var(--primary-blue);
+}
+
+.shortcut .key {
+    padding: 0.5rem;
+    background-color: var(--bg-accent);
+    border-radius: 6px;
+    color: var(--primary-blue);
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.9rem;
+}
+
+.shortcut .action {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+/* Enhanced About Page Sections */
+.features-container, .use-cases, .technical-notes, .roadmap-section, .tech-stack-section, .acknowledgements-section {
     margin-bottom: 2.5rem;
+}
+
+.features-container h3, .use-cases h3, .technical-notes h3, .roadmap-section h3, .tech-stack-section h3, .acknowledgements-section h3 {
+    font-size: 1.25rem;
+    margin-bottom: 1.25rem;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.75rem;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.features-container h3 i, .use-cases h3 i, .technical-notes h3 i, .roadmap-section h3 i, .tech-stack-section h3 i, .acknowledgements-section h3 i {
+    color: var(--primary-blue);
 }
 
 .features-grid, .use-cases-grid {
@@ -1246,7 +1451,7 @@ input[type="range"]::-moz-range-thumb:hover {
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
 }
 
-.feature-item i, .use-case-item i {
+.feature-item i {
     color: var(--primary-green);
     font-size: 0.8rem;
     width: 20px;
@@ -1259,10 +1464,158 @@ input[type="range"]::-moz-range-thumb:hover {
     padding: 0.85rem;
 }
 
+.use-case-item i {
+    color: var(--primary-blue);
+    font-size: 0.8rem;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(37, 99, 235, 0.15);
+    border-radius: 50%;
+    padding: 0.85rem;
+}
+
 .technical-notes p {
     color: var(--text-secondary);
     margin-bottom: 1rem;
     line-height: 1.6;
+}
+
+/* Enhanced Tech Stack Section */
+.tech-stack-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+}
+
+.tech-item {
+    display: flex;
+    gap: 1rem;
+    background-color: var(--bg-dark);
+    padding: 1.25rem;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    transition: all var(--transition-normal);
+}
+
+.tech-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+    border-color: var(--primary-blue);
+}
+
+.tech-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 10px;
+    background-color: rgba(37, 99, 235, 0.1);
+    color: var(--primary-blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.tech-content h4 {
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.tech-content p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+/* Enhanced Roadmap Section */
+.roadmap-timeline {
+    position: relative;
+    padding-left: 2rem;
+}
+
+.roadmap-timeline::before {
+    content: '';
+    position: absolute;
+    left: 7px;
+    top: 10px;
+    bottom: 10px;
+    width: 2px;
+    background-color: var(--border-color);
+}
+
+.roadmap-item {
+    position: relative;
+    margin-bottom: 1.75rem;
+}
+
+.roadmap-marker {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    position: absolute;
+    left: -24px;
+    top: 4px;
+}
+
+.roadmap-marker.planned {
+    background-color: var(--primary-green);
+}
+
+.roadmap-marker.considered {
+    background-color: var(--warning-color);
+}
+
+.roadmap-content {
+    background-color: var(--bg-dark);
+    padding: 1.25rem;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    transition: all var(--transition-normal);
+}
+
+.roadmap-content:hover {
+    transform: translateX(10px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+    border-color: var(--primary-blue);
+}
+
+.roadmap-content h4 {
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.roadmap-content p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+/* Enhanced Acknowledgements Section */
+.acknowledgements-list {
+    list-style: none;
+    padding: 1.25rem;
+    background-color: var(--bg-dark);
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+}
+
+.acknowledgements-list li {
+    position: relative;
+    padding-left: 1.5rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.75rem;
+}
+
+.acknowledgements-list li::before {
+    content: '❧';
+    position: absolute;
+    left: 0;
+    color: var(--primary-blue);
 }
 
 .about-footer {
@@ -1564,6 +1917,26 @@ footer a:hover {
     .help-section-grid {
         grid-template-columns: 1fr;
     }
+    
+    .map-types-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .tech-stack-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .troubleshooting-list {
+        grid-template-columns: 1fr;
+    }
+    
+    .shortcuts-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .quick-step {
+        flex-basis: 100%;
+    }
 }
 
 @media (max-width: 768px) {
@@ -1609,6 +1982,10 @@ footer a:hover {
 
     .social-links {
         justify-content: center;
+    }
+    
+    .shortcuts-grid {
+        grid-template-columns: 1fr;
     }
 }
 
