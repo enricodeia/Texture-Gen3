@@ -9,6 +9,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <meta name="description" content="Create professional PBR texture maps instantly from a single image">
+    <meta name="keywords" content="texture generator, PBR maps, 3D textures, normal maps, displacement maps, roughness maps">
 </head>
 <body>
     <div class="app-container">
@@ -331,15 +333,50 @@
             </main>
         </div>
 
-        <!-- Help Page -->
+        <!-- Enhanced Help Page -->
         <div class="page-content hidden" id="help-page">
             <div class="help-container">
                 <h2>How to Use Texture Gen v2</h2>
                 <p class="help-description">This tool converts a single image into a complete set of PBR texture maps. Here's how to get started:</p>
                 
+                <!-- Quick Start Guide - Added new section -->
+                <div class="help-section quick-start">
+                    <h3><i class="fas fa-bolt"></i> Quick Start Guide</h3>
+                    <div class="quick-steps">
+                        <div class="quick-step">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <strong>Upload an Image</strong>
+                                <p>Click "Browse Files" or drag & drop your texture image in the upload area.</p>
+                            </div>
+                        </div>
+                        <div class="quick-step">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <strong>Adjust Settings</strong>
+                                <p>Fine-tune texture settings using the sliders to achieve your desired look.</p>
+                            </div>
+                        </div>
+                        <div class="quick-step">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <strong>Preview in 3D</strong>
+                                <p>Check your maps applied to the 3D sphere, rotate to view from all angles.</p>
+                            </div>
+                        </div>
+                        <div class="quick-step">
+                            <div class="step-number">4</div>
+                            <div class="step-content">
+                                <strong>Export</strong>
+                                <p>Download individual maps or export all as ZIP. You can also get Three.js code.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="help-section-grid">
                     <div class="help-section">
-                        <h3>Basic Controls</h3>
+                        <h3><i class="fas fa-sliders-h"></i> Basic Controls</h3>
                         <ul class="help-list">
                             <li>
                                 <strong>Upload Image:</strong> Click "Browse Files" or drag-and-drop your image
@@ -381,7 +418,7 @@
                     </div>
                     
                     <div class="help-section">
-                        <h3>Exporting Your Maps</h3>
+                        <h3><i class="fas fa-download"></i> Exporting Your Maps</h3>
                         <ul class="help-list">
                             <li>
                                 <strong>Download Individual Maps</strong>
@@ -408,28 +445,48 @@
                 </div>
                 
                 <div class="help-section">
-                    <h3>Map Types Explained</h3>
-                    <ul class="help-list">
-                        <li>
-                            <strong>Base Color Map:</strong> Also known as albedo or diffuse map, this represents the color of the surface without lighting information.
-                        </li>
-                        <li>
-                            <strong>Normal Map:</strong> Creates the illusion of detailed 3D surface features by encoding surface direction.
-                        </li>
-                        <li>
-                            <strong>Roughness Map:</strong> Defines how rough or smooth a surface is, affecting how light scatters across it.
-                        </li>
-                        <li>
-                            <strong>Displacement Map:</strong> Actually displaces the geometry to create real surface detail (unlike normal maps which only simulate detail).
-                        </li>
-                        <li>
-                            <strong>Ambient Occlusion (AO) Map:</strong> Represents how exposed each point of the surface is to ambient lighting.
-                        </li>
-                    </ul>
+                    <h3><i class="fas fa-map"></i> Map Types Explained</h3>
+                    <div class="map-types-grid">
+                        <div class="map-type-card">
+                            <div class="map-type-icon"><i class="fas fa-palette"></i></div>
+                            <div class="map-type-content">
+                                <h4>Base Color Map</h4>
+                                <p>Also known as albedo or diffuse map, this represents the color of the surface without lighting information. This is essentially the "color" of your material.</p>
+                            </div>
+                        </div>
+                        <div class="map-type-card">
+                            <div class="map-type-icon"><i class="fas fa-mountain"></i></div>
+                            <div class="map-type-content">
+                                <h4>Normal Map</h4>
+                                <p>Creates the illusion of detailed 3D surface features by encoding surface direction. It adds bumps, dents, and surface details without adding geometry.</p>
+                            </div>
+                        </div>
+                        <div class="map-type-card">
+                            <div class="map-type-icon"><i class="fas fa-water"></i></div>
+                            <div class="map-type-content">
+                                <h4>Roughness Map</h4>
+                                <p>Defines how rough or smooth a surface is, affecting how light scatters across it. White areas are rough (matte), black areas are smooth (glossy).</p>
+                            </div>
+                        </div>
+                        <div class="map-type-card">
+                            <div class="map-type-icon"><i class="fas fa-cubes"></i></div>
+                            <div class="map-type-content">
+                                <h4>Displacement Map</h4>
+                                <p>Actually displaces the geometry to create real surface detail. Unlike normal maps which only simulate detail, displacement maps physically push vertices of the 3D mesh.</p>
+                            </div>
+                        </div>
+                        <div class="map-type-card">
+                            <div class="map-type-icon"><i class="fas fa-adjust"></i></div>
+                            <div class="map-type-content">
+                                <h4>Ambient Occlusion (AO) Map</h4>
+                                <p>Represents how exposed each point of the surface is to ambient lighting. It simulates soft shadows that occur in crevices and corners of objects.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="help-section">
-                    <h3>Tips for Best Results</h3>
+                    <h3><i class="fas fa-lightbulb"></i> Tips for Best Results</h3>
                     <ul class="help-list">
                         <li>
                             <strong>Use High-Resolution Images:</strong> For best detail in all generated maps, start with high-resolution source images.
@@ -451,10 +508,91 @@
                         </li>
                     </ul>
                 </div>
+                
+                <!-- Advanced Usage - New Section -->
+                <div class="help-section">
+                    <h3><i class="fas fa-graduation-cap"></i> Advanced Usage</h3>
+                    <ul class="help-list">
+                        <li>
+                            <strong>Cross-Application Workflow:</strong>
+                            <p>The generated maps work with any 3D application that supports PBR materials, including Blender, Unity, Unreal Engine, Substance Designer, and more.</p>
+                        </li>
+                        <li>
+                            <strong>Customizing for Game Engines:</strong>
+                            <p>For Unity, use the normal map directly. For Unreal Engine, you may need to invert the green channel of your normal map. You can do this in an image editor after exporting.</p>
+                        </li>
+                        <li>
+                            <strong>Optimizing for Low-End Hardware:</strong>
+                            <p>For mobile or low-end applications, consider using just the base color and normal maps to maintain visual quality while reducing performance impact.</p>
+                        </li>
+                        <li>
+                            <strong>Creating Material Variations:</strong>
+                            <p>Generate maps from similar textures, then blend them together in an external editor to create versatile material variations.</p>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- Troubleshooting - New Section -->
+                <div class="help-section">
+                    <h3><i class="fas fa-wrench"></i> Troubleshooting</h3>
+                    <div class="troubleshooting-list">
+                        <div class="troubleshooting-item">
+                            <h4>Images not uploading</h4>
+                            <p>Make sure your image is in a supported format (JPG, PNG, WebP). If using drag and drop, try using the browse files button instead.</p>
+                        </div>
+                        <div class="troubleshooting-item">
+                            <h4>3D preview not displaying correctly</h4>
+                            <p>Ensure your browser supports WebGL. Try refreshing the page or using a different browser (Chrome or Firefox recommended).</p>
+                        </div>
+                        <div class="troubleshooting-item">
+                            <h4>Generated maps look incorrect</h4>
+                            <p>Source images with heavy shadows or specular highlights can cause issues. Try using images with even, diffuse lighting for best results.</p>
+                        </div>
+                        <div class="troubleshooting-item">
+                            <h4>Export fails</h4>
+                            <p>Check that you have selected at least one map type for export. If exporting as ZIP, make sure you have sufficient disk space available.</p>
+                        </div>
+                        <div class="troubleshooting-item">
+                            <h4>Performance issues</h4>
+                            <p>Working with very large textures (4K+) may affect performance. Consider using smaller textures or closing other browser tabs to free up memory.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Keyboard Shortcuts - New Section -->
+                <div class="help-section">
+                    <h3><i class="fas fa-keyboard"></i> Keyboard Shortcuts</h3>
+                    <div class="shortcuts-grid">
+                        <div class="shortcut">
+                            <span class="key">R</span>
+                            <span class="action">Reset all sliders to default values</span>
+                        </div>
+                        <div class="shortcut">
+                            <span class="key">G</span>
+                            <span class="action">Toggle grid visibility</span>
+                        </div>
+                        <div class="shortcut">
+                            <span class="key">A</span>
+                            <span class="action">Toggle auto-rotation</span>
+                        </div>
+                        <div class="shortcut">
+                            <span class="key">E</span>
+                            <span class="action">Export all maps as ZIP</span>
+                        </div>
+                        <div class="shortcut">
+                            <span class="key">C</span>
+                            <span class="action">Export Three.js code</span>
+                        </div>
+                        <div class="shortcut">
+                            <span class="key">Arrow Keys</span>
+                            <span class="action">Fine-tune rotation of the 3D preview</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- About Page -->
+        <!-- Enhanced About Page -->
         <div class="page-content hidden" id="about-page">
             <div class="about-container">
                 <h2>About Texture Gen v2</h2>
@@ -463,7 +601,7 @@
                 </p>
                 
                 <p class="about-description">
-                    The generator uses advanced image processing techniques to analyze source images and extract information about surface details, lighting, and material properties. All processing happens directly in your browser – no server uploads required.
+                    The generator uses advanced image processing algorithms to analyze source images and extract information about surface details, lighting, and material properties. All processing happens directly in your browser – no server uploads required.
                 </p>
                 
                 <div class="features-container">
@@ -528,46 +666,95 @@
                     </div>
                 </div>
                 
+                <!-- Technology Stack - New Section -->
+                <div class="tech-stack-section">
+                    <h3><i class="fas fa-layer-group"></i> Technology Stack</h3>
+                    <div class="tech-stack-grid">
+                        <div class="tech-item">
+                            <div class="tech-icon"><i class="fab fa-js"></i></div>
+                            <div class="tech-content">
+                                <h4>JavaScript</h4>
+                                <p>Core programming language powering all functionality and image processing algorithms.</p>
+                            </div>
+                        </div>
+                        <div class="tech-item">
+                            <div class="tech-icon"><i class="fas fa-cube"></i></div>
+                            <div class="tech-content">
+                                <h4>Three.js</h4>
+                                <p>Powerful 3D library providing real-time WebGL rendering for interactive material preview.</p>
+                            </div>
+                        </div>
+                        <div class="tech-item">
+                            <div class="tech-icon"><i class="fas fa-image"></i></div>
+                            <div class="tech-content">
+                                <h4>Canvas API</h4>
+                                <p>HTML5 Canvas technology for advanced image processing and texture map generation.</p>
+                            </div>
+                        </div>
+                        <div class="tech-item">
+                            <div class="tech-icon"><i class="fas fa-file-archive"></i></div>
+                            <div class="tech-content">
+                                <h4>JSZip</h4>
+                                <p>Client-side ZIP file creation for packaging multiple texture maps.</p>
+                            </div>
+                        </div>
+                        <div class="tech-item">
+                            <div class="tech-icon"><i class="fas fa-save"></i></div>
+                            <div class="tech-content">
+                                <h4>FileSaver.js</h4>
+                                <p>Streamlines file download functionality for texture maps and code exports.</p>
+                            </div>
+                        </div>
+                        <div class="tech-item">
+                            <div class="tech-icon"><i class="fas fa-paint-brush"></i></div>
+                            <div class="tech-content">
+                                <h4>Custom Algorithms</h4>
+                                <p>Proprietary image analysis techniques for extracting material properties from a single image.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="use-cases">
-                    <h3>Use Cases</h3>
+                    <h3><i class="fas fa-briefcase"></i> Use Cases</h3>
                     <div class="use-cases-grid">
                         <div class="use-case-item">
-                            <i class="fas fa-check"></i>
+                            <i class="fas fa-gamepad"></i>
                             <span>Game development asset creation</span>
                         </div>
                         <div class="use-case-item">
-                            <i class="fas fa-check"></i>
+                            <i class="fas fa-building"></i>
                             <span>Architectural visualization materials</span>
                         </div>
                         <div class="use-case-item">
-                            <i class="fas fa-check"></i>
+                            <i class="fas fa-globe"></i>
                             <span>Web-based 3D experiences</span>
                         </div>
                         <div class="use-case-item">
-                            <i class="fas fa-check"></i>
+                            <i class="fas fa-vr-cardboard"></i>
                             <span>VR/AR development</span>
                         </div>
                         <div class="use-case-item">
-                            <i class="fas fa-check"></i>
+                            <i class="fas fa-print"></i>
                             <span>3D printing texture mapping</span>
                         </div>
                         <div class="use-case-item">
-                            <i class="fas fa-check"></i>
+                            <i class="fas fa-box"></i>
                             <span>Product visualization</span>
                         </div>
                         <div class="use-case-item">
-                            <i class="fas fa-check"></i>
+                            <i class="fas fa-user-astronaut"></i>
                             <span>3D character material creation</span>
                         </div>
                         <div class="use-case-item">
-                            <i class="fas fa-check"></i>
+                            <i class="fas fa-graduation-cap"></i>
                             <span>Education and learning</span>
                         </div>
                     </div>
                 </div>
                 
                 <div class="technical-notes">
-                    <h3>Technical Notes</h3>
+                    <h3><i class="fas fa-cogs"></i> Technical Notes</h3>
                     <p>
                         Texture Gen v2 works entirely in your browser with no server-side processing. Your images are never uploaded to any server, ensuring your designs remain private and secure.
                     </p>
@@ -580,6 +767,60 @@
                     <p>
                         The exported Three.js code is designed to be lightweight and compatible with modern browsers, providing an easy way to use your generated materials in web-based 3D projects.
                     </p>
+                </div>
+                
+                <!-- Roadmap - New Section -->
+                <div class="roadmap-section">
+                    <h3><i class="fas fa-road"></i> Roadmap & Future Updates</h3>
+                    <div class="roadmap-timeline">
+                        <div class="roadmap-item">
+                            <div class="roadmap-marker planned"></div>
+                            <div class="roadmap-content">
+                                <h4>Material Presets</h4>
+                                <p>Pre-configured settings for common material types like metal, wood, fabric, stone, and plastic.</p>
+                            </div>
+                        </div>
+                        <div class="roadmap-item">
+                            <div class="roadmap-marker planned"></div>
+                            <div class="roadmap-content">
+                                <h4>Advanced Map Editing</h4>
+                                <p>Direct editing tools for fine-tuning generated maps with brushes and filters.</p>
+                            </div>
+                        </div>
+                        <div class="roadmap-item">
+                            <div class="roadmap-marker planned"></div>
+                            <div class="roadmap-content">
+                                <h4>Custom 3D Models</h4>
+                                <p>Preview your materials on various 3D models beyond the default sphere.</p>
+                            </div>
+                        </div>
+                        <div class="roadmap-item">
+                            <div class="roadmap-marker considered"></div>
+                            <div class="roadmap-content">
+                                <h4>AI-Enhanced Generation</h4>
+                                <p>Machine learning algorithms to improve texture map generation quality.</p>
+                            </div>
+                        </div>
+                        <div class="roadmap-item">
+                            <div class="roadmap-marker considered"></div>
+                            <div class="roadmap-content">
+                                <h4>Material Library</h4>
+                                <p>Save and organize your generated materials for future use.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Acknowledgements - New Section -->
+                <div class="acknowledgements-section">
+                    <h3><i class="fas fa-award"></i> Acknowledgements</h3>
+                    <p>Texture Gen v2 builds upon the work of many brilliant developers in the 3D graphics and web technology communities. Special thanks to:</p>
+                    <ul class="acknowledgements-list">
+                        <li>The Three.js team for their incredible 3D library</li>
+                        <li>JSZip and FileSaver.js developers for their essential utilities</li>
+                        <li>The open-source PBR material specification community</li>
+                        <li>Early beta testers who provided valuable feedback</li>
+                    </ul>
                 </div>
                 
                 <div class="about-footer">
