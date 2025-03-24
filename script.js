@@ -111,6 +111,23 @@ document.addEventListener('DOMContentLoaded', function() {
     const toggleGridBtn = document.getElementById('toggle-grid');
     const resetControlsBtn = document.getElementById('reset-controls');
     
+    // Resolution Scaling (NEW)
+    const outputWidth = document.getElementById('output-width');
+    const outputHeight = document.getElementById('output-height');
+    const maintainAspect = document.getElementById('maintain-aspect');
+    const scalingMethod = document.getElementById('scaling-method');
+    const applyScalingBtn = document.getElementById('apply-scaling');
+    
+    // Presets Manager (NEW)
+    const togglePresetsBtn = document.getElementById('toggle-presets');
+    const presetsManager = document.getElementById('presets-manager');
+    const closePresetsBtn = document.getElementById('close-presets');
+    const presetNameInput = document.getElementById('preset-name');
+    const savePresetBtn = document.getElementById('save-preset');
+    const presetList = document.getElementById('preset-list');
+    const loadPresetBtn = document.getElementById('load-preset');
+    const deletePresetBtn = document.getElementById('delete-preset');
+    
     // Processing indicator
     const processingIndicator = document.getElementById('processing-indicator');
     const progressBar = document.getElementById('progress-bar');
@@ -491,6 +508,366 @@ document.addEventListener('DOMContentLoaded', function() {
                 }, { once: true });
             });
         });
+
+        // Initialize resolution scaling controls
+        initResolutionScaling();
+        
+        // Initialize presets manager
+        initPresetsManager();
+    }
+    
+    // Initialize Resolution Scaling functionality (NEW)
+    function initResolutionScaling() {
+        // Initialize with current dimensions when textures are generated
+        if (hasUploadedImage && baseCanvas) {
+            outputWidth.value = baseCanvas.width;
+            outputHeight.value = baseCanvas.height;
+        }
+        
+        // Update height when width changes (if maintain aspect ratio is checked)
+        outputWidth.addEventListener('input', function() {
+            if (maintainAspect.checked && hasUploadedImage && baseCanvas) {
+                const aspectRatio = baseCanvas.width / baseCanvas.height;
+                outputHeight.value = Math.round(outputWidth.value / aspectRatio);
+            }
+        });
+        
+        // Update width when height changes (if maintain aspect ratio is checked)
+        outputHeight.addEventListener('input', function() {
+            if (maintainAspect.checked && hasUploadedImage && baseCanvas) {
+                const aspectRatio = baseCanvas.width / baseCanvas.height;
+                outputWidth.value = Math.round(outputHeight.value * aspectRatio);
+            }
+        });
+        
+        // Apply scaling to all canvases
+        applyScalingBtn.addEventListener('click', function() {
+            if (!hasUploadedImage) {
+                showNotification('Please upload a texture first', 'error');
+                return;
+            }
+            
+            const targetWidth = parseInt(outputWidth.value);
+            const targetHeight = parseInt(outputHeight.value);
+            
+            // Validate dimensions
+            if (isNaN(targetWidth) || isNaN(targetHeight) || 
+                targetWidth < 32 || targetHeight < 32 || 
+                targetWidth > 4096 || targetHeight > 4096) {
+                showNotification('Please enter valid dimensions (32-4096px)', 'error');
+                return;
+            }
+            
+            // Start processing
+            showLoadingIndicator('Scaling texture maps...', 10);
+            
+            // Use setTimeout to allow the UI to update before processing
+            setTimeout(() => {
+                try {
+                    // Scale each canvas
+                    scaleCanvas(baseCanvas, targetWidth, targetHeight, scalingMethod.value);
+                    updateProgress(20);
+                    
+                    scaleCanvas(normalCanvas, targetWidth, targetHeight, scalingMethod.value);
+                    updateProgress(40);
+                    
+                    scaleCanvas(roughnessCanvas, targetWidth, targetHeight, scalingMethod.value);
+                    updateProgress(60);
+                    
+                    scaleCanvas(displacementCanvas, targetWidth, targetHeight, scalingMethod.value);
+                    updateProgress(80);
+                    
+                    scaleCanvas(aoCanvas, targetWidth, targetHeight, scalingMethod.value);
+                    updateProgress(90);
+                    
+                    // Update textures for the 3D preview
+                    updateTexturesAfterScaling();
+                    
+                    // Update map sizes display
+                    updateMapSizes();
+                    
+                    showNotification('Texture maps scaled successfully!', 'success');
+                    updateProgress(100);
+                    setTimeout(() => hideLoadingIndicator(), 500);
+                } catch (error) {
+                    console.error('Error scaling textures:', error);
+                    hideLoadingIndicator();
+                    showNotification('Error scaling textures. Please try again.', 'error');
+                }
+            }, 100);
+        });
+    }
+    
+    // Scale a canvas to target dimensions
+    function scaleCanvas(canvas, targetWidth, targetHeight, method) {
+        if (!canvas) return;
+        
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = targetWidth;
+        tempCanvas.height = targetHeight;
+        const tempCtx = tempCanvas.getContext('2d');
+        
+        // Set scaling algorithm
+        tempCtx.imageSmoothingEnabled = method !== 'pixelated';
+        
+        if (method === 'bicubic') {
+            // Bicubic is not directly supported by canvas, so we use a 2-step process
+            // First, scale to an intermediate size
+            const interCanvas = document.createElement('canvas');
+            interCanvas.width = Math.round((canvas.width + targetWidth) / 2);
+            interCanvas.height = Math.round((canvas.height + targetHeight) / 2);
+            const interCtx = interCanvas.getContext('2d');
+            interCtx.imageSmoothingEnabled = true;
+            interCtx.drawImage(canvas, 0, 0, interCanvas.width, interCanvas.height);
+            
+            // Then scale to the final size
+            tempCtx.drawImage(interCanvas, 0, 0, targetWidth, targetHeight);
+        } else {
+            // Bilinear or nearest neighbor
+            if (method === 'pixelated') {
+                tempCtx.imageSmoothingEnabled = false;
+            }
+            tempCtx.drawImage(canvas, 0, 0, targetWidth, targetHeight);
+        }
+        
+        // Clear original canvas and resize it
+        const ctx = canvas.getContext('2d');
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+        
+        // Copy the scaled image back to the original canvas
+        ctx.drawImage(tempCanvas, 0, 0);
+    }
+    
+    // Update Three.js textures after scaling
+    function updateTexturesAfterScaling() {
+        if (baseTexture) {
+            baseTexture.needsUpdate = true;
+        }
+        if (normalTexture) {
+            normalTexture.needsUpdate = true;
+        }
+        if (roughnessTexture) {
+            roughnessTexture.needsUpdate = true;
+        }
+        if (displacementTexture) {
+            displacementTexture.needsUpdate = true;
+        }
+        if (aoTexture) {
+            aoTexture.needsUpdate = true;
+        }
+        
+        // Recreate the sphere to update the textures
+        createSphere();
+    }
+    
+    // Initialize Presets Manager functionality (NEW)
+    function initPresetsManager() {
+        // Local storage key
+        const PRESETS_STORAGE_KEY = 'textureGenPresets';
+        
+        // Toggle presets manager visibility
+        togglePresetsBtn.addEventListener('click', function() {
+            presetsManager.classList.toggle('hidden');
+            togglePresetsBtn.classList.toggle('active');
+            
+            // Refresh preset list when opened
+            if (!presetsManager.classList.contains('hidden')) {
+                loadPresetsList();
+            }
+        });
+        
+        // Close presets manager
+        closePresetsBtn.addEventListener('click', function() {
+            presetsManager.classList.add('hidden');
+            togglePresetsBtn.classList.remove('active');
+        });
+        
+        // Enable/disable load and delete buttons based on selection
+        presetList.addEventListener('change', function() {
+            const isPresetSelected = presetList.selectedIndex !== -1 && !presetList.options[presetList.selectedIndex].disabled;
+            loadPresetBtn.disabled = !isPresetSelected;
+            deletePresetBtn.disabled = !isPresetSelected;
+        });
+        
+        // Save current settings as a preset
+        savePresetBtn.addEventListener('click', function() {
+            const presetName = presetNameInput.value.trim();
+            
+            if (!presetName) {
+                showNotification('Please enter a preset name', 'error');
+                return;
+            }
+            
+            savePreset(presetName);
+            presetNameInput.value = '';
+            loadPresetsList();
+            showNotification(`Preset "${presetName}" saved successfully`, 'success');
+        });
+        
+        // Load selected preset
+        loadPresetBtn.addEventListener('click', function() {
+            if (presetList.selectedIndex === -1 || presetList.options[presetList.selectedIndex].disabled) {
+                showNotification('Please select a preset to load', 'error');
+                return;
+            }
+            
+            const presetName = presetList.options[presetList.selectedIndex].text;
+            loadPreset(presetName);
+            showNotification(`Preset "${presetName}" loaded successfully`, 'success');
+        });
+        
+        // Delete selected preset
+        deletePresetBtn.addEventListener('click', function() {
+            if (presetList.selectedIndex === -1 || presetList.options[presetList.selectedIndex].disabled) {
+                showNotification('Please select a preset to delete', 'error');
+                return;
+            }
+            
+            const presetName = presetList.options[presetList.selectedIndex].text;
+            
+            // Ask for confirmation
+            if (confirm(`Are you sure you want to delete the preset "${presetName}"?`)) {
+                deletePreset(presetName);
+                loadPresetsList();
+                showNotification(`Preset "${presetName}" deleted`, 'info');
+            }
+        });
+        
+        // Save current settings as a preset
+        function savePreset(name) {
+            // Get all current settings
+            const settings = {
+                base: parseFloat(baseStrength.value),
+                normal: parseFloat(normalStrength.value),
+                roughness: parseFloat(roughnessStrength.value),
+                displacement: parseFloat(displacementStrength.value),
+                ao: parseFloat(aoStrength.value),
+                metalness: parseFloat(metalness.value),
+                lightX: parseFloat(lightX.value),
+                lightY: parseFloat(lightY.value),
+                lightZ: parseFloat(lightZ.value),
+                rotationX: parseFloat(rotationX.value),
+                rotationY: parseFloat(rotationY.value),
+                autoRotate: autoRotate
+            };
+            
+            // Get existing presets or initialize empty object
+            let presets = JSON.parse(localStorage.getItem(PRESETS_STORAGE_KEY) || '{}');
+            
+            // Add/update preset
+            presets[name] = settings;
+            
+            // Save to localStorage
+            localStorage.setItem(PRESETS_STORAGE_KEY, JSON.stringify(presets));
+        }
+        
+        // Load a preset by name
+        function loadPreset(name) {
+            // Get presets from localStorage
+            const presets = JSON.parse(localStorage.getItem(PRESETS_STORAGE_KEY) || '{}');
+            
+            if (!presets[name]) {
+                showNotification(`Preset "${name}" not found`, 'error');
+                return;
+            }
+            
+            const settings = presets[name];
+            
+            // Apply settings
+            baseStrength.value = settings.base;
+            normalStrength.value = settings.normal;
+            roughnessStrength.value = settings.roughness;
+            displacementStrength.value = settings.displacement;
+            aoStrength.value = settings.ao;
+            metalness.value = settings.metalness;
+            lightX.value = settings.lightX;
+            lightY.value = settings.lightY;
+            lightZ.value = settings.lightZ;
+            
+            // Update display values
+            baseValue.textContent = settings.base.toFixed(1);
+            normalValue.textContent = settings.normal.toFixed(1);
+            roughnessValue.textContent = settings.roughness.toFixed(1);
+            displacementValue.textContent = settings.displacement.toFixed(1);
+            aoValue.textContent = settings.ao.toFixed(1);
+            metalnessValue.textContent = settings.metalness.toFixed(1);
+            
+            // Update rotation
+            rotationX.value = settings.rotationX;
+            rotationY.value = settings.rotationY;
+            
+            // Update auto-rotation
+            autoRotate = settings.autoRotate;
+            if (autoRotate) {
+                toggleAutoRotateBtn.classList.add('active');
+            } else {
+                toggleAutoRotateBtn.classList.remove('active');
+            }
+            
+            // Update material and light
+            updateTextures();
+            updateMaterial();
+            updateLightPosition();
+            
+            // Apply to sphere if it exists
+            if (sphere) {
+                sphere.rotation.x = settings.rotationX;
+                sphere.rotation.y = settings.rotationY;
+            }
+        }
+        
+        // Delete a preset by name
+        function deletePreset(name) {
+            // Get presets from localStorage
+            let presets = JSON.parse(localStorage.getItem(PRESETS_STORAGE_KEY) || '{}');
+            
+            // Remove the preset
+            if (presets[name]) {
+                delete presets[name];
+                
+                // Save back to localStorage
+                localStorage.setItem(PRESETS_STORAGE_KEY, JSON.stringify(presets));
+            }
+        }
+        
+        // Load and display the list of saved presets
+        function loadPresetsList() {
+            // Clear existing options
+            presetList.innerHTML = '';
+            
+            // Get presets from localStorage
+            const presets = JSON.parse(localStorage.getItem(PRESETS_STORAGE_KEY) || '{}');
+            const presetNames = Object.keys(presets);
+            
+            // If no presets, show placeholder
+            if (presetNames.length === 0) {
+                const option = document.createElement('option');
+                option.disabled = true;
+                option.textContent = 'No presets saved';
+                presetList.appendChild(option);
+                
+                // Disable buttons
+                loadPresetBtn.disabled = true;
+                deletePresetBtn.disabled = true;
+                return;
+            }
+            
+            // Add each preset to the list
+            presetNames.sort().forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                presetList.appendChild(option);
+            });
+            
+            // Disable buttons initially (until selection)
+            loadPresetBtn.disabled = true;
+            deletePresetBtn.disabled = true;
+        }
+        
+        // Initialize presets list
+        loadPresetsList();
     }
     
     // Mouse down handler for model container
@@ -799,6 +1176,12 @@ document.addEventListener('DOMContentLoaded', function() {
                             updateProgress(100);
                             hideLoadingIndicator();
                             showNotification('Texture maps generated successfully!', 'success');
+                            
+                            // Initialize resolution scaling with current dimensions (NEW)
+                            if (outputWidth && outputHeight) {
+                                outputWidth.value = img.width;
+                                outputHeight.value = img.height;
+                            }
                         }, 500);
                     } catch (error) {
                         console.error('Error processing image:', error);
@@ -986,6 +1369,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Update map sizes display
         updateMapSizes();
+        
+        // Dispatch a custom event when textures are generated (NEW)
+        document.dispatchEvent(new CustomEvent('texturesGenerated'));
     }
     
     // Generate base color map (formerly diffuse)
