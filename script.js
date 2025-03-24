@@ -1,7 +1,20 @@
+/**
+ * Texture Gen v2 - Main JavaScript
+ * 
+ * This script handles all the functionality for the Texture Gen v2 application,
+ * including texture map generation, 3D preview, UI interactions, and export functionality.
+ * 
+ * @author Enrico Deiana
+ * @version 2.0
+ * @license MIT
+ */
+
 // Wait until everything is fully loaded
 document.addEventListener('DOMContentLoaded', function() {
     
-    // Global variables
+    /**
+     * Global variables - Core app state and objects
+     */
     let scene, camera, renderer, sphere, light, grid;
     let baseTexture, normalTexture, roughnessTexture, displacementTexture, aoTexture;
     let originalImageData;
@@ -14,7 +27,10 @@ document.addEventListener('DOMContentLoaded', function() {
     let previousMousePosition = { x: 0, y: 0 };
     let isGridVisible = true;
     
-    // Default control values for reset
+    /**
+     * Default control values for reset functionality
+     * These values represent the initial/optimal texture generation settings
+     */
     const defaultValues = {
         baseStrength: 1.0,
         normalStrength: 1.0,
@@ -27,7 +43,10 @@ document.addEventListener('DOMContentLoaded', function() {
         lightZ: 5
     };
     
-    // DOM Elements
+    /**
+     * DOM Elements - UI references cached for performance
+     */
+    // Main UI elements
     const uploadArea = document.getElementById('upload-area');
     const uploadContent = document.querySelector('.upload-content');
     const textureUpload = document.getElementById('texture-upload');
@@ -107,7 +126,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const displacementFormat = document.getElementById('displacement-format');
     const aoFormat = document.getElementById('ao-format');
     
-    // New UI controls
+    // UI controls
     const toggleGridBtn = document.getElementById('toggle-grid');
     const resetControlsBtn = document.getElementById('reset-controls');
     
@@ -119,7 +138,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Notification container
     const notificationContainer = document.getElementById('notification-container');
     
-    // Humorous loading messages
+    /**
+     * Collection of humorous loading messages shown during processing
+     * These add personality to the app while waiting for operations to complete
+     */
     const loadingMessages = [
         "Teaching photons how to bounce properly...",
         "Converting 2D boringness into 3D awesomeness...",
@@ -143,9 +165,16 @@ document.addEventListener('DOMContentLoaded', function() {
         "Calculating how shadows would hide if they could..."
     ];
     
-    // Initialize the application
+    /**
+     * Initialize the application
+     * Entry point for the application, sets up the environment and event listeners
+     */
     init();
     
+    /**
+     * Main initialization function
+     * Sets up Three.js, event listeners, and UI state
+     */
     function init() {
         // Check if THREE is loaded
         if (typeof THREE === 'undefined') {
@@ -171,6 +200,9 @@ document.addEventListener('DOMContentLoaded', function() {
             // Set up page navigation
             setupNavigation();
             
+            // Set up keyboard shortcuts
+            setupKeyboardShortcuts();
+            
             // Initialize UI state
             toggleGridBtn.classList.add('active');
             toggleAutoRotateBtn.classList.add('active');
@@ -181,7 +213,90 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Set up page navigation
+    /**
+     * Set up keyboard shortcuts
+     * Adds keyboard shortcuts for common actions as shown in the Help page
+     */
+    function setupKeyboardShortcuts() {
+        document.addEventListener('keydown', (e) => {
+            // Only handle shortcuts when not typing in an input
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+                return;
+            }
+            
+            switch (e.key.toLowerCase()) {
+                case 'r':
+                    // Reset all sliders to default values
+                    resetControls();
+                    break;
+                case 'g':
+                    // Toggle grid visibility
+                    toggleGridVisibility();
+                    break;
+                case 'a':
+                    // Toggle auto-rotation
+                    toggleAutoRotation();
+                    break;
+                case 'e':
+                    // Export all maps as ZIP
+                    if (hasUploadedImage) {
+                        exportAllMapsAsZip();
+                    } else {
+                        showNotification('Please upload a texture first', 'warning');
+                    }
+                    break;
+                case 'c':
+                    // Export Three.js code
+                    if (hasUploadedImage) {
+                        exportThreejsCode();
+                    } else {
+                        showNotification('Please upload a texture first', 'warning');
+                    }
+                    break;
+                case 'arrowleft':
+                    // Rotate left
+                    if (sphere) {
+                        sphere.rotation.y -= 0.1;
+                        if (!isDraggingSlider) {
+                            rotationY.value = sphere.rotation.y;
+                        }
+                    }
+                    break;
+                case 'arrowright':
+                    // Rotate right
+                    if (sphere) {
+                        sphere.rotation.y += 0.1;
+                        if (!isDraggingSlider) {
+                            rotationY.value = sphere.rotation.y;
+                        }
+                    }
+                    break;
+                case 'arrowup':
+                    // Rotate up
+                    if (sphere) {
+                        sphere.rotation.x -= 0.1;
+                        if (!isDraggingSlider) {
+                            rotationX.value = sphere.rotation.x;
+                        }
+                    }
+                    break;
+                case 'arrowdown':
+                    // Rotate down
+                    if (sphere) {
+                        sphere.rotation.x += 0.1;
+                        if (!isDraggingSlider) {
+                            rotationX.value = sphere.rotation.x;
+                        }
+                    }
+                    break;
+            }
+        });
+    }
+    
+    /**
+     * Set up page navigation
+     * Handles tab switching between Generator, Help, and About pages
+     */
     function setupNavigation() {
         navTabs.forEach(tab => {
             tab.addEventListener('click', () => {
@@ -214,7 +329,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Initialize Three.js scene
+    /**
+     * Initialize Three.js scene
+     * Sets up the 3D environment for material preview
+     */
     function initThreeJS() {
         // Create scene
         scene = new THREE.Scene();
@@ -280,7 +398,10 @@ document.addEventListener('DOMContentLoaded', function() {
         animate();
     }
     
-    // Create or update the sphere with textures
+    /**
+     * Create or update the sphere with textures
+     * Builds the 3D preview with current texture maps and material settings
+     */
     function createSphere() {
         // Remove existing sphere if it exists
         if (sphere) {
@@ -343,7 +464,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Animation loop
+    /**
+     * Animation loop
+     * Handles continuous rendering and automatic rotation
+     */
     function animate() {
         animationFrameId = requestAnimationFrame(animate);
         
@@ -366,7 +490,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Handle window resize
+    /**
+     * Handle window resize
+     * Adjusts camera and renderer when window size changes
+     */
     function onWindowResize() {
         if (camera && renderer && modelContainer) {
             camera.aspect = modelContainer.clientWidth / modelContainer.clientHeight;
@@ -375,7 +502,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Set up event listeners
+    /**
+     * Set up event listeners
+     * Connects UI elements to their respective event handlers
+     */
     function setupEventListeners() {
         // File upload via input
         textureUpload.addEventListener('change', handleFileUpload);
@@ -493,7 +623,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Mouse down handler for model container
+    /**
+     * Mouse down handler for model container
+     * Initiates interactive rotation of the 3D preview
+     */
     function onModelMouseDown(event) {
         if (!sphere) return;
         
@@ -517,7 +650,10 @@ document.addEventListener('DOMContentLoaded', function() {
         event.preventDefault();
     }
     
-    // Mouse move handler for model container
+    /**
+     * Mouse move handler for model container
+     * Updates sphere rotation based on mouse movement
+     */
     function onModelMouseMove(event) {
         if (!isDraggingSphere || !sphere) return;
         
@@ -543,7 +679,10 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     }
     
-    // Mouse up handler for model container
+    /**
+     * Mouse up handler for model container
+     * Ends interactive rotation
+     */
     function onModelMouseUp() {
         isDraggingSphere = false;
         
@@ -552,7 +691,10 @@ document.addEventListener('DOMContentLoaded', function() {
         document.removeEventListener('mouseup', onModelMouseUp);
     }
     
-    // Touch start handler for model container (mobile)
+    /**
+     * Touch start handler for model container (mobile)
+     * Initiates touch-based rotation on mobile devices
+     */
     function onModelTouchStart(event) {
         if (!sphere) return;
         
@@ -574,7 +716,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Touch move handler for model container (mobile)
+    /**
+     * Touch move handler for model container (mobile)
+     * Updates sphere rotation based on touch movement
+     */
     function onModelTouchMove(event) {
         if (!isDraggingSphere || !sphere) return;
         
@@ -606,7 +751,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Touch end handler for model container (mobile)
+    /**
+     * Touch end handler for model container (mobile)
+     * Ends touch-based rotation
+     */
     function onModelTouchEnd() {
         isDraggingSphere = false;
         
@@ -615,7 +763,10 @@ document.addEventListener('DOMContentLoaded', function() {
         document.removeEventListener('touchend', onModelTouchEnd);
     }
     
-    // Toggle grid visibility
+    /**
+     * Toggle grid visibility
+     * Shows or hides the orientation grid
+     */
     function toggleGridVisibility() {
         if (grid) {
             isGridVisible = !isGridVisible;
@@ -632,7 +783,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Reset all controls to default values
+    /**
+     * Reset all controls to default values
+     * Reverts all sliders and settings to their initial state
+     */
     function resetControls() {
         // Reset all sliders to default values
         baseStrength.value = defaultValues.baseStrength;
@@ -684,7 +838,10 @@ document.addEventListener('DOMContentLoaded', function() {
         showNotification('Settings reset to defaults', 'success');
     }
     
-    // Clear the uploaded image
+    /**
+     * Clear the uploaded image
+     * Removes the current texture and resets the UI
+     */
     function clearImage() {
         // Reset the UI
         previewOverlay.style.display = 'none';
@@ -731,13 +888,20 @@ document.addEventListener('DOMContentLoaded', function() {
         showNotification('Image removed', 'info');
     }
     
-    // Clear a canvas
+    /**
+     * Clear a canvas
+     * Utility function to clear the content of a canvas element
+     * @param {HTMLCanvasElement} canvas - The canvas to clear
+     */
     function clearCanvas(canvas) {
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
     
-    // Handle file upload
+    /**
+     * Handle file upload
+     * Processes files selected through the file input
+     */
     function handleFileUpload(e) {
         console.log("File upload triggered", e.target.files);
         if (e.target.files && e.target.files.length) {
@@ -745,7 +909,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Process uploaded file
+    /**
+     * Process uploaded file
+     * Handles the texture generation from the uploaded image
+     * @param {File} file - The uploaded image file
+     */
     function processUploadedFile(file) {
         console.log("Processing file:", file);
         if (!file || !file.type.match('image.*')) {
@@ -819,7 +987,11 @@ document.addEventListener('DOMContentLoaded', function() {
         reader.readAsDataURL(file);
     }
     
-    // Update texture stats display
+    /**
+     * Update texture stats display
+     * Shows file information for the uploaded texture
+     * @param {File} file - The uploaded image file
+     */
     function updateTextureStats(file) {
         // Format file size
         const fileSizeKB = file.size / 1024;
@@ -847,7 +1019,10 @@ document.addEventListener('DOMContentLoaded', function() {
         img.src = URL.createObjectURL(file);
     }
     
-    // Update map size information
+    /**
+     * Update map size information
+     * Displays dimensions of generated texture maps
+     */
     function updateMapSizes() {
         if (baseCanvas.width && baseCanvas.height) {
             baseMapSize.textContent = `${baseCanvas.width} × ${baseCanvas.height}`;
@@ -858,40 +1033,68 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Get a random loading message
+    /**
+     * Get a random loading message
+     * Adds personality to the loading screen
+     * @returns {string} A random loading message
+     */
     function getRandomLoadingMessage() {
         return loadingMessages[Math.floor(Math.random() * loadingMessages.length)];
     }
     
-    // Handle processing error
+    /**
+     * Handle processing error
+     * Manages error state when image processing fails
+     */
     function handleProcessingError() {
         hideLoadingIndicator();
         showNotification('Error processing image. Please try another image.', 'error');
     }
     
-    // Show loading indicator with specified message and progress
+    /**
+     * Show loading indicator with specified message and progress
+     * Displays the loading overlay with custom message and progress bar
+     * @param {string} message - The message to display
+     * @param {number} progress - Progress percentage (0-100)
+     */
     function showLoadingIndicator(message, progress = 0) {
         processingMessage.textContent = message;
         progressBar.style.width = `${progress}%`;
         processingIndicator.style.display = 'flex';
     }
     
-    // Update loading progress
+    /**
+     * Update loading progress
+     * Updates the progress bar during loading operations
+     * @param {number} progress - Progress percentage (0-100)
+     */
     function updateProgress(progress) {
         progressBar.style.width = `${progress}%`;
     }
     
-    // Update loading message
+    /**
+     * Update loading message
+     * Changes the displayed message during loading operations
+     * @param {string} message - The new message to display
+     */
     function updateLoadingMessage(message) {
         processingMessage.textContent = message;
     }
     
-    // Hide loading indicator
+    /**
+     * Hide loading indicator
+     * Removes the loading overlay
+     */
     function hideLoadingIndicator() {
         processingIndicator.style.display = 'none';
     }
     
-    // Show notification
+    /**
+     * Show notification
+     * Displays a toast notification to the user
+     * @param {string} message - The notification message
+     * @param {string} type - Notification type: 'success', 'error', 'info', or 'warning'
+     */
     function showNotification(message, type = 'info') {
         // Define titles based on notification type
         const titles = {
@@ -957,7 +1160,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 5000);
     }
     
-    // Get image data from an image element
+    /**
+     * Get image data from an image element
+     * Extracts pixel data from an image for processing
+     * @param {HTMLImageElement} img - The image element
+     * @returns {ImageData} The extracted image data
+     */
     function getImageData(img) {
         const canvas = document.createElement('canvas');
         canvas.width = img.width;
@@ -967,7 +1175,11 @@ document.addEventListener('DOMContentLoaded', function() {
         return ctx.getImageData(0, 0, canvas.width, canvas.height);
     }
     
-    // Generate all texture maps
+    /**
+     * Generate all texture maps
+     * Creates all PBR texture maps from the source image
+     * @param {HTMLImageElement} img - The source image
+     */
     function generateTextureMaps(img) {
         // Generate base color map (formerly diffuse)
         generateBaseMap(img);
@@ -988,7 +1200,11 @@ document.addEventListener('DOMContentLoaded', function() {
         updateMapSizes();
     }
     
-    // Generate base color map (formerly diffuse)
+    /**
+     * Generate base color map (formerly diffuse)
+     * Creates the base color texture from the source image
+     * @param {HTMLImageElement} img - The source image
+     */
     function generateBaseMap(img) {
         // Set canvas dimensions
         baseCanvas.width = img.width;
@@ -1008,7 +1224,11 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log("Base color map generated");
     }
     
-    // Generate normal map with enhanced detail
+    /**
+     * Generate normal map with enhanced detail
+     * Creates a normal map from the image data using sobel operators
+     * @param {ImageData} imageData - The source image data
+     */
     function generateNormalMap(imageData) {
         // Set canvas dimensions
         normalCanvas.width = imageData.width;
@@ -1079,7 +1299,11 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log("Normal map generated");
     }
     
-    // Generate roughness map
+    /**
+     * Generate roughness map
+     * Creates a roughness map based on image variance and brightness
+     * @param {ImageData} imageData - The source image data
+     */
     function generateRoughnessMap(imageData) {
         // Set canvas dimensions
         roughnessCanvas.width = imageData.width;
@@ -1147,7 +1371,11 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log("Roughness map generated");
     }
     
-    // Generate displacement map
+    /**
+     * Generate displacement map
+     * Creates a displacement map based on image brightness with contrast enhancement
+     * @param {ImageData} imageData - The source image data
+     */
     function generateDisplacementMap(imageData) {
         // Set canvas dimensions
         displacementCanvas.width = imageData.width;
@@ -1184,7 +1412,11 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log("Displacement map generated");
     }
     
-    // Generate ambient occlusion map
+    /**
+     * Generate ambient occlusion map
+     * Creates an AO map by analyzing edges and shadows in the image
+     * @param {ImageData} imageData - The source image data
+     */
     function generateAOMap(imageData) {
         // Set canvas dimensions
         aoCanvas.width = imageData.width;
@@ -1275,7 +1507,10 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log("AO map generated");
     }
     
-    // Update textures based on slider values
+    /**
+     * Update textures based on slider values
+     * Applies strength values to textures based on slider positions
+     */
     function updateTextures() {
         // Update display values
         baseValue.textContent = parseFloat(baseStrength.value).toFixed(1);
@@ -1307,7 +1542,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Update material properties
+    /**
+     * Update material properties
+     * Applies metalness value to material
+     */
     function updateMaterial() {
         // Update display values
         metalnessValue.textContent = parseFloat(metalness.value).toFixed(1);
@@ -1318,7 +1556,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Update light position
+    /**
+     * Update light position
+     * Changes light position based on slider values
+     */
     function updateLightPosition() {
         if (light) {
             light.position.set(
@@ -1329,7 +1570,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Estimate file size based on format and canvas
+    /**
+     * Estimate file size based on format and canvas
+     * Provides a rough estimate of texture file size based on dimensions and format
+     * @param {HTMLCanvasElement} canvas - The canvas containing the texture
+     * @param {string} format - Export format (png, webp, or jpeg)
+     * @returns {string} Estimated file size as a string
+     */
     function estimateFileSize(canvas, format) {
         // Get canvas dimensions
         const width = canvas.width;
@@ -1356,7 +1603,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Download texture as image with selected format
+    /**
+     * Download texture as image with selected format
+     * Exports a single texture map to a file
+     * @param {HTMLCanvasElement} canvas - Canvas containing the texture map
+     * @param {string} filename - Base name for the file
+     * @param {string} format - Export format (png, webp, or jpeg)
+     */
     function downloadTexture(canvas, filename, format = 'png') {
         if (!hasUploadedImage) {
             showNotification('Please upload a texture first', 'error');
@@ -1391,7 +1644,10 @@ document.addEventListener('DOMContentLoaded', function() {
         showNotification(`${filename.split('-')[0]} map downloaded as ${formatNames[format]}`, 'success');
     }
     
-    // Export all selected maps as a ZIP file
+    /**
+     * Export all selected maps as a ZIP file
+     * Packages multiple texture maps into a single download
+     */
     function exportAllMapsAsZip() {
         if (!hasUploadedImage) {
             showNotification('Please upload a texture first', 'error');
@@ -1517,7 +1773,12 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
     
-    // Convert Data URL to Blob for ZIP file
+    /**
+     * Convert Data URL to Blob for ZIP file
+     * Utility function to convert data URLs to blobs for JSZip
+     * @param {string} dataURL - Data URL string
+     * @returns {Blob} The converted blob
+     */
     function dataURLToBlob(dataURL) {
         const parts = dataURL.split(';base64,');
         const contentType = parts[0].split(':')[1];
@@ -1532,7 +1793,10 @@ document.addEventListener('DOMContentLoaded', function() {
         return new Blob([uInt8Array], {type: contentType});
     }
     
-    // Toggle auto-rotation
+    /**
+     * Toggle auto-rotation
+     * Enables or disables automatic rotation of the 3D preview
+     */
     function toggleAutoRotation() {
         autoRotate = !autoRotate;
         if (autoRotate) {
@@ -1544,7 +1808,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Update rotation from sliders
+    /**
+     * Update rotation from sliders
+     * Applies manual rotation from slider controls
+     */
     function updateRotation() {
         if (!sphere) return;
         
@@ -1560,7 +1827,10 @@ document.addEventListener('DOMContentLoaded', function() {
         sphere.rotation.y = parseFloat(rotationY.value);
     }
     
-    // Export Three.js code with current format settings
+    /**
+     * Export Three.js code with current format settings
+     * Generates ready-to-use Three.js code that implements the current material
+     */
     function exportThreejsCode() {
         if (!hasUploadedImage) {
             showNotification('Please upload a texture first', 'error');
@@ -1579,7 +1849,13 @@ document.addEventListener('DOMContentLoaded', function() {
         showLoadingIndicator('Generating Three.js code...', 50);
         
         // Create sample Three.js code with current settings
-        const code = `// Three.js Material Example with Exported Textures
+        const code = `/**
+ * Three.js Material Example with Exported Textures
+ * Generated by Texture Gen v2
+ * 
+ * This code implements a PBR material setup using the texture maps
+ * generated and configured in Texture Gen v2.
+ */
 import * as THREE from 'three';
 
 // Create a scene, camera, and renderer
