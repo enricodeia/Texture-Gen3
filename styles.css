@@ -116,7 +116,6 @@ code, pre {
 .nav-tabs {
     display: flex;
     gap: 0.5rem;
-    margin: 0.75rem auto;
 }
 
 .nav-tab {
